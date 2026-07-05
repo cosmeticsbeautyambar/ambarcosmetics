@@ -1,0 +1,10 @@
+{
+  "name": "ambar-cosmetics-root",
+  "version": "1.0.0",
+  "scripts": {
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "build-frontend": "cd frontend && npm run build",
+    "start-backend": "cd backend && node server.js"
+  }
+}
