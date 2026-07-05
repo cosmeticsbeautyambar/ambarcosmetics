@@ -1,0 +1,6 @@
+cosmeticsbeautyambar_db_user
+dutrJNOINgxqEQ7V
+
+mongodb+srv://cosmeticsbeautyambar_db_user:dutrJNOINgxqEQ7V@ambarcosmetics.zeyxoyx.mongodb.net/?appName=Ambarcosmetics
+
+https://github.com/cosmeticsbeautyambar/ambarcosmetics.git
