@@ -1,49 +1,65 @@
-import React, { useState, useEffect } from 'react'; // 1. Agregamos hooks
+const Product = require('../models/Product');
+// Obtener productos destacados
+exports.getTopProducts = async (req, res) => {
+  try {
+    const topProducts = await Product.find({}).sort({ salesCount: -1 }).limit(6);
+    res.json(topProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener productos' });
+  }
+};
+// Obtener todos los productos (con opción de búsqueda)
+exports.getProducts = async (req, res) => {
+  try {
+    const keyword = req.query.search ? {
+      name: { $regex: req.query.search, $options: 'i' }
+    } : {};
+    const products = await Product.find({ ...keyword });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener productos' });
+  }
+};
 
-export default function Home() {
-  const [destacados, setDestacados] = useState([]); // 2. Estado para productos reales
+// Crear producto (Admin)
+exports.createProduct = async (req, res) => {
+  try {
+    const product = new Product(req.body);
+    const createdProduct = await product.save();
+    res.status(201).json(createdProduct);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al crear producto' });
+  }
+};
 
-  // 3. Efecto para llamar a tu nueva ruta /api/productos/destacados
-  useEffect(() => {
-    fetch('/api/productos/destacados')
-      .then((res) => res.json())
-      .then((data) => setDestacados(data))
-      .catch((err) => console.error("Error cargando destacados:", err));
-  }, []);
+// Actualizar producto/precio (Admin)
+exports.updateProduct = async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar producto' });
+  }
+};
 
-  // ... (mantené la constante 'lanzamientos' igual que antes)
+// Dar de baja/Eliminar producto (Admin)
+exports.deleteProduct = async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Producto eliminado con éxito' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al eliminar producto' });
+  }
+}; // <--- La llave de cierre correcta para deleteProduct
 
-  return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
-      {/* ... (Header y Hero Banner iguales) ... */}
-
-      {/* 5. DESTACADOS DINÁMICOS */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Lo más elegido</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {destacados.map((item) => (
-            <div key={item._id} className="bg-white border border-stone-200 p-6 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
-              {/* Imagen dinámica desde MongoDB */}
-              <div className="h-44 w-full bg-stone-50 rounded-xs mb-5 overflow-hidden">
-                <img 
-                  src={item.image} 
-                  alt={item.name} 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
-                <p className="text-xs font-semibold text-stone-900 pb-2">${item.price.toLocaleString('es-AR')}</p>
-                <button className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
-                  Agregar al carrito
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ... (Resto del Footer igual) ... */}
-    </div>
-  );
-}
+// Obtener los productos más vendidos (destacados)
+exports.getTopProducts = async (req, res) => {
+  try {
+    const topProducts = await Product.find({})
+      .sort({ salesCount: -1 })
+      .limit(6);
+    res.json(topProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener productos destacados' });
+  }
+};
