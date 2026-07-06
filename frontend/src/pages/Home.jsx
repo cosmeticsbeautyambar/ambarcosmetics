@@ -1,123 +1,114 @@
 import React from 'react';
 
 export default function Home() {
-  // Datos de prueba temporales para simular tus productos
+  // Datos simulados estructurados sin imágenes externas
   const lanzamientos = [
-    { id: 1, name: 'Línea Rostro', image: 'https://via.placeholder.com/150' },
-    { id: 2, name: 'Skin Care', image: 'https://via.placeholder.com/150' },
-    { id: 3, name: 'Labiales', image: 'https://via.placeholder.com/150' },
+    { id: 1, name: 'Línea Rostro', color: 'bg-rose-50' },
+    { id: 2, name: 'Skin Care', color: 'bg-orange-50' },
+    { id: 3, name: 'Labiales', color: 'bg-red-50' },
   ];
 
   const destacados = [
-    { id: 1, name: 'Máscara para pestañas', price: '$21.000,00', image: 'https://via.placeholder.com/250' },
-    { id: 2, name: 'Base BB Cream Ámbar', price: '$30.000,00', image: 'https://via.placeholder.com/250', tag: 'Envío gratis' },
-    { id: 3, name: 'Corrector Líquido', price: '$24.000,00', image: 'https://via.placeholder.com/250' },
+    { id: 1, name: 'MÁSCARA PARA PESTAÑAS', price: '$21.000,00', color: 'bg-stone-100' },
+    { id: 2, name: 'BASE BB CREAM ÁMBAR', price: '$30.000,00', color: 'bg-stone-100', tag: 'Envío gratis' },
+    { id: 3, name: 'CORRECTOR LÍQUIDO', price: '$24.000,00', color: 'bg-stone-100' },
   ];
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans relative">
+    <div className="min-h-screen bg-neutral-50 text-stone-800 font-sans antialiased">
 
-      {/* 1. HEADER & NAVBAR (image_6f934a.jpg) */}
-      <header className="border-b border-gray-100 sticky top-0 bg-white z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold tracking-widest text-gray-900">ÁMBAR</div>
+      {/* 1. HEADER & NAVBAR */}
+      <header className="border-b border-stone-200 sticky top-0 bg-white/90 backdrop-blur-md z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="text-xl font-semibold tracking-widest text-stone-900">ÁMBAR</div>
           
-          {/* Buscador */}
-          <div className="hidden md:flex items-center border border-gray-300 rounded-md px-3 py-1 w-1/3">
-            <input type="text" placeholder="Buscar..." className="w-full focus:outline-none text-sm" />
-            <span className="text-gray-400">🔍</span>
+          {/* Buscador minimalista */}
+          <div className="hidden md:flex items-center border border-stone-300 rounded px-3 py-1 w-1/3 bg-stone-50">
+            <input type="text" placeholder="Buscar..." className="w-full bg-transparent focus:outline-none text-xs" />
+            <span className="text-stone-400 text-xs">🔍</span>
           </div>
 
-          {/* Iconos Usuario y Carrito */}
-          <div className="flex items-center space-x-6 text-xl">
-            <button className="hover:text-pink-500">👤</button>
-            <button className="hover:text-pink-500 relative">
+          {/* Iconos */}
+          <div className="flex items-center space-x-4 text-lg text-stone-600">
+            <button className="hover:text-stone-900 transition">👤</button>
+            <button className="hover:text-stone-900 transition relative">
               🛍️
-              <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">0</span>
+              <span className="absolute -top-1.5 -right-1.5 bg-stone-900 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">0</span>
             </button>
           </div>
         </div>
 
-        {/* Selector de Páginas / Navegación */}
-        <nav className="max-w-7xl mx-auto px-4 py-2 flex justify-center space-x-8 text-xs font-semibold uppercase tracking-wider text-gray-600">
-          <a href="#" className="hover:text-black">Descubrir</a>
-          <a href="#" className="hover:text-black">Cosméticos</a>
-          <a href="#" className="hover:text-black">Skin Care</a>
-          <a href="#" className="hover:text-black">Destacados</a>
-          <a href="#" className="hover:text-black">Ayuda</a>
+        {/* Menú */}
+        <nav className="border-t border-stone-100 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-6 text-[11px] font-medium uppercase tracking-wider text-stone-500">
+          <a href="#" className="hover:text-stone-900 transition">Descubrir</a>
+          <a href="#" className="hover:text-stone-900 transition">Cosméticos</a>
+          <a href="#" className="hover:text-stone-900 transition">Skin Care</a>
+          <a href="#" className="hover:text-stone-900 transition">Destacados</a>
+          <a href="#" className="hover:text-stone-900 transition">Ayuda</a>
         </nav>
       </header>
 
-      {/* 2. BANNER PRINCIPAL / HERO (image_6f934a.jpg) */}
-      {/* Usamos object-cover y un contenedor con altura controlada para que la foto no se corte feo */}
-      <section className="relative w-full h-[60vh] md:h-[80vh] bg-gray-100 overflow-hidden">
-        <img 
-          src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=1920" 
-          alt="Banner Principal" 
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-black/5 flex items-center justify-between px-4">
-          <button className="bg-white/50 p-2 rounded-full">◀</button>
-          <button className="bg-white/50 p-2 rounded-full">▶</button>
+      {/* 2. HERO BANNER - Reemplazado por caja minimalista rosa pastel */}
+      <section className="w-full bg-rose-100/60 py-20 px-6 text-center border-b border-rose-200/30">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <span className="text-[10px] font-bold tracking-widest text-rose-600 uppercase">Nueva Colección</span>
+          <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-900">Cosmética Consciente & Natural</h1>
+          <p className="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">Fórmulas diseñadas para resaltar tu belleza real. Envíos a todo el país.</p>
+          <div className="pt-2">
+            <button className="bg-stone-900 text-white text-xs tracking-widest uppercase px-6 py-2.5 hover:bg-stone-800 transition">Ver Catálogo</button>
+          </div>
         </div>
       </section>
 
-      {/* 3. ÚLTIMOS LANZAMIENTOS (image_6f96ae.png) */}
-      <section className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-xl font-bold uppercase tracking-widest mb-8">Últimos lanzamientos</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+      {/* 3. ÚLTIMOS LANZAMIENTOS - Bloques limpios */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-center text-stone-400 mb-10">Últimos lanzamientos</h2>
+        <div className="grid grid-cols-3 gap-4 md:gap-8">
           {lanzamientos.map((prod) => (
-            <div key={prod.id} className="group cursor-pointer">
-              <div className="overflow-hidden bg-gray-50 rounded-lg p-4">
-                <img src={prod.image} alt={prod.name} className="mx-auto mix-blend-multiply group-hover:scale-105 transition duration-300" />
+            <div key={prod.id} className="text-center cursor-pointer group">
+              <div className={`${prod.color} h-28 md:h-40 rounded flex items-center justify-center border border-stone-200/40 group-hover:opacity-90 transition`}>
+                <span className="text-xl md:text-2xl opacity-40">✨</span>
               </div>
-              <p className="mt-3 text-xs uppercase tracking-wider font-semibold text-gray-500">{prod.name}</p>
+              <p className="mt-3 text-[10px] uppercase tracking-wider font-semibold text-stone-600">{prod.name}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. COMPRA POR CATEGORÍA (image_6f9725.jpg - Ajustado el tamaño para cuidar la experiencia) */}
-      <section className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <h2 className="text-xl font-bold uppercase tracking-widest mb-8">Compra por Categoría</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="relative h-64 bg-gray-200 overflow-hidden group cursor-pointer rounded-md">
-            <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Rostro"/>
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-              <span className="text-white font-bold tracking-widest uppercase">Rostro</span>
-            </div>
+      {/* 4. COMPRA POR CATEGORÍA */}
+      <section className="max-w-6xl mx-auto px-6 py-4">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-center text-stone-400 mb-10">Compra por Categoría</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-32 bg-stone-100 border border-stone-200 rounded flex items-center justify-center cursor-pointer hover:bg-stone-200/50 transition">
+            <span className="text-xs font-medium tracking-widest uppercase text-stone-700">Rostro</span>
           </div>
-          <div className="relative h-64 bg-gray-200 overflow-hidden group cursor-pointer rounded-md">
-            <img src="https://images.unsplash.com/photo-1608248597481-496100c8c836?w=500" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Skin Care"/>
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-              <span className="text-white font-bold tracking-widest uppercase">Skin Care</span>
-            </div>
+          <div className="h-32 bg-orange-50/50 border border-orange-100 rounded flex items-center justify-center cursor-pointer hover:bg-orange-100/40 transition">
+            <span className="text-xs font-medium tracking-widest uppercase text-stone-700">Skin Care</span>
           </div>
-          <div className="relative h-64 bg-gray-200 overflow-hidden group cursor-pointer rounded-md">
-            <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="Labios"/>
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-              <span className="text-white font-bold tracking-widest uppercase">Labios</span>
-            </div>
+          <div className="h-32 bg-rose-50/50 border border-rose-100 rounded flex items-center justify-center cursor-pointer hover:bg-rose-100/40 transition">
+            <span className="text-xs font-medium tracking-widest uppercase text-stone-700">Labios</span>
           </div>
         </div>
       </section>
 
-      {/* 5. DESTACADOS (image_6f9a4a.png) */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-xl font-bold uppercase tracking-widest text-center mb-10">Destacados</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      {/* 5. DESTACADOS */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-center text-stone-400 mb-12">Destacados</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {destacados.map((item) => (
-            <div key={item.id} className="relative flex flex-col justify-between border border-gray-50 p-4 rounded-md shadow-sm">
+            <div key={item.id} className="bg-white border border-stone-200 p-5 rounded relative flex flex-col justify-between">
               {item.tag && (
-                <span className="absolute top-2 left-2 bg-pink-100 text-pink-700 text-[10px] font-bold uppercase px-2 py-1 rounded">
+                <span className="absolute top-3 left-3 bg-rose-50 text-rose-600 text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-rose-100">
                   {item.tag}
                 </span>
               )}
-              <img src={item.image} alt={item.name} className="w-full h-56 object-contain mb-4" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">{item.name}</h3>
-                <p className="text-base font-bold text-gray-900 mb-4">{item.price}</p>
-                <button className="w-full bg-gray-500 text-white py-2 text-sm font-semibold rounded hover:bg-gray-600 transition">
+              <div className="h-36 w-full bg-neutral-50 rounded flex items-center justify-center mb-4 text-stone-300 text-lg">
+                📦
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xs font-medium tracking-wide text-stone-600">{item.name}</h3>
+                <p className="text-sm font-semibold text-stone-900 pb-3">{item.price}</p>
+                <button className="w-full bg-stone-900 text-white py-2 text-xs font-medium uppercase tracking-wider hover:bg-stone-800 transition">
                   Comprar
                 </button>
               </div>
@@ -126,51 +117,50 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. FOOTER E INFORMACIÓN EXTRA (image_6f9a6a.png) */}
-      <footer className="bg-gray-100 mt-20 border-t border-gray-200">
+      {/* 6. FOOTER */}
+      <footer className="bg-stone-100 border-t border-stone-200">
         {/* Newsletter */}
-        <div className="bg-slate-500 text-white py-8">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="bg-stone-800 text-stone-100 py-10 px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-              <h3 className="text-lg font-bold tracking-wider">Newsletter</h3>
-              <p className="text-sm text-gray-200">Registrate y recibí nuestras ofertas.</p>
+              <h3 className="text-sm font-semibold tracking-wider uppercase">Newsletter</h3>
+              <p className="text-xs text-stone-400">Suscribite para enterarte de lanzamientos y promociones.</p>
             </div>
-            <div className="flex w-full sm:w-auto gap-2">
-              <input type="email" placeholder="Ingresá tu email..." className="px-4 py-2 text-black text-sm rounded-sm focus:outline-none w-full sm:w-64" />
-              <button className="bg-transparent border border-white px-6 py-2 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-slate-500 transition">Enviar</button>
-            </div>
-          </div>
-        </div>
-
-        {/* Datos de Contacto */}
-        <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 gap-8 text-sm text-gray-600">
-          <div>
-            <h4 className="font-bold text-gray-900 mb-4">Contactanos</h4>
-            <p className="mb-2">📞 5491123210838</p>
-            <p className="mb-2">✉️ ventas@ambarcosmetics.com.ar</p>
-            <p>📍 Libertador 7000, Buenos Aires</p>
-          </div>
-          <div className="sm:text-right">
-            <h4 className="font-bold text-gray-900 mb-4">Redes Sociales</h4>
-            <div className="flex sm:justify-end space-x-4 text-xl">
-              <a href="#" className="hover:text-pink-500">📸 Instagram</a>
-              <a href="#" className="hover:text-pink-500">📌 Pinterest</a>
+            <div className="flex w-full md:w-auto gap-2">
+              <input type="email" placeholder="Tu email..." className="px-3 py-2 bg-stone-700 text-white text-xs rounded focus:outline-none w-full md:w-56 placeholder-stone-400" />
+              <button className="bg-white text-stone-900 px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-stone-200 transition">Unirme</button>
             </div>
           </div>
         </div>
 
-        {/* Derechos */}
-        <div className="border-t border-gray-200 py-4 text-center text-xs text-gray-400">
-          Copyright Ámbar Cosmetics - {new Date().getFullYear()}. Todos los derechos reservados.
+        {/* Contacto */}
+        <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-stone-500">
+          <div className="space-y-2">
+            <h4 className="font-bold uppercase tracking-wider text-stone-800">Contacto</h4>
+            <p>📞 +54 9 11 2321-0838</p>
+            <p>✉️ ventas@ambarcosmetics.com.ar</p>
+            <p>📍 Av. Libertador 7000, Buenos Aires</p>
+          </div>
+          <div className="md:text-right space-y-2">
+            <h4 className="font-bold uppercase tracking-wider text-stone-800">Redes</h4>
+            <div className="flex md:justify-end space-x-4">
+              <a href="#" className="hover:text-stone-900 transition">Instagram</a>
+              <a href="#" className="hover:text-stone-900 transition">Pinterest</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-stone-200 py-4 text-center text-[10px] text-stone-400">
+          © {new Date().getFullYear()} Ámbar Cosmetics. Todos los derechos reservados.
         </div>
       </footer>
 
-      {/* 7. BOTÓN FLOTANTE DE WHATSAPP (image_6f934a.jpg) */}
+      {/* 7. BOTÓN FLOTANTE WHATSAPP */}
       <a 
         href="https://wa.me/5491123210838" 
         target="_blank" 
         rel="noreferrer" 
-        className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition duration-300 z-50 flex items-center justify-center text-2xl"
+        className="fixed bottom-6 right-6 bg-emerald-500 text-white w-12 h-12 rounded-full shadow-lg hover:bg-emerald-600 transition flex items-center justify-center text-xl z-50"
       >
         💬
       </a>
