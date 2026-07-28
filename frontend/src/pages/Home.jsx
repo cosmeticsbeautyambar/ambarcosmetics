@@ -1,25 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [destacados, setDestacados] = useState([]);
+
+  // Llamada a la API para cargar productos destacados reales desde MongoDB
+  useEffect(() => {
+    fetch('/api/productos/destacados')
+      .then((res) => res.json())
+      .then((data) => setDestacados(data))
+      .catch((err) => console.error("Error al cargar destacados:", err));
+  }, []);
+
   const lanzamientos = [
     { id: 1, name: 'Línea Rostro', color: 'bg-rose-100/40 text-rose-700' },
     { id: 2, name: 'Skin Care', color: 'bg-amber-100/40 text-amber-700' },
     { id: 3, name: 'Labiales', color: 'bg-red-100/40 text-red-700' },
   ];
 
-  const destacados = [
-    { id: 1, name: 'MÁSCARA PARA PESTAÑAS', price: '$21.000,00', icon: '👁️' },
-    { id: 2, name: 'BASE BB CREAM ÁMBAR', price: '$30.000,00', icon: '✨', tag: 'Envío gratis' },
-    { id: 3, name: 'CORRECTOR LÍQUIDO', price: '$24.000,00', icon: '💧' },
-  ];
-
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
-
-      {/* BANNER DE ANUNCIO SUPERIOR */}
-      <div className="bg-stone-900 text-white text-[10px] tracking-[0.2em] uppercase py-2 text-center font-medium">
-        3 Cuotas sin interés • Envío gratis en compras mayores a $45.000
-      </div>
 
       {/* 1. HEADER & NAVBAR */}
       <header className="border-b border-stone-200 sticky top-0 bg-white/95 backdrop-blur-md z-50 shadow-xs">
@@ -97,23 +96,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. DESTACADOS */}
+      {/* 5. DESTACADOS DINÁMICOS */}
       <section className="max-w-5xl mx-auto px-6 py-16">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Productos Destacados</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {destacados.map((item) => (
-            <div key={item.id} className="bg-white border border-stone-200 p-6 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
-              {item.tag && (
-                <span className="absolute top-3 left-3 bg-stone-900 text-white text-[8px] font-bold uppercase px-2 py-0.5 tracking-wider z-10">
-                  {item.tag}
-                </span>
-              )}
-              <div className="h-44 w-full bg-stone-50 rounded-xs flex items-center justify-center mb-5 text-2xl opacity-60">
-                {item.icon}
+            <div key={item._id} className="bg-white border border-stone-200 p-6 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
+              <div className="h-44 w-full bg-stone-50 rounded-xs mb-5 overflow-hidden flex items-center justify-center">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
-                <p className="text-xs font-semibold text-stone-900 pb-2">{item.price}</p>
+                <p className="text-xs font-semibold text-stone-900 pb-2">${item.price?.toLocaleString('es-AR')}</p>
                 <button className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
                   Agregar al carrito
                 </button>
