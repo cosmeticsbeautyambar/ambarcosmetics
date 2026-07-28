@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import logoImg from '../assets/logo.png'; // Asegúrate de ajustar la extensión (.png, .jpg, .svg) o ruta según donde guardaste el archivo
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
@@ -23,7 +24,18 @@ export default function Home() {
       {/* 1. HEADER & NAVBAR */}
       <header className="border-b border-stone-200 sticky top-0 bg-white/95 backdrop-blur-md z-50 shadow-xs">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-2xl font-light tracking-[0.3em] text-stone-900">ÁMBAR</div>
+          
+          {/* BRANDING: LOGO IMPORTADO + NOMBRE DE LA MARCA */}
+          <div className="flex items-center gap-3">
+            <img 
+              src={logoImg} 
+              alt="Logo Ámbar" 
+              className="h-8 w-auto object-contain" 
+            />
+            <div className="text-2xl font-light tracking-[0.3em] text-stone-900">
+              ÁMBAR
+            </div>
+          </div>
           
           {/* Buscador minimalista */}
           <div className="hidden md:flex items-center border border-stone-200 rounded-xs px-3 py-1.5 w-1/3 bg-stone-50">
