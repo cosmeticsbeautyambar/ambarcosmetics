@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import logoImg from '../assets/logo.png'; // Asegúrate de ajustar la extensión (.png, .jpg, .svg) o ruta según donde guardaste el archivo
+import logoImg from '../assets/logo.jpeg';
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
