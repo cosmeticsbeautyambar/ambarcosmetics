@@ -4,7 +4,6 @@ import logoImg from '../assets/logo.jpeg';
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
 
-  // Llamada a la API para cargar productos destacados reales desde MongoDB
   useEffect(() => {
     fetch('/api/productos/destacados')
       .then((res) => res.json())
@@ -21,31 +20,37 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
 
-      {/* 1. HEADER & NAVBAR */}
-      <header className="border-b border-stone-200 sticky top-0 bg-white/95 backdrop-blur-md z-50 shadow-xs">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      {/* 1. HEADER & NAVBAR (Fondo mimetizado con el logo) */}
+      <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
+        <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
           
-          {/* BRANDING: LOGO IMPORTADO + NOMBRE DE LA MARCA */}
-          <div className="flex items-center gap-3">
+          {/* BRANDING: LOGO AGRANDADO + NOMBRE */}
+          <div className="flex items-center gap-4">
             <img 
               src={logoImg} 
               alt="Logo Ámbar" 
-              className="h-8 w-auto object-contain" 
+              className="h-14 md:h-16 w-auto object-contain mix-blend-multiply" 
             />
-            <div className="text-2xl font-light tracking-[0.3em] text-stone-900">
+            <div className="text-2xl md:text-3xl font-light tracking-[0.3em] text-stone-900">
               ÁMBAR
             </div>
           </div>
           
           {/* Buscador minimalista */}
-          <div className="hidden md:flex items-center border border-stone-200 rounded-xs px-3 py-1.5 w-1/3 bg-stone-50">
-            <input type="text" placeholder="Buscar productos..." className="w-full bg-transparent focus:outline-none text-xs text-stone-600" />
-            <span className="text-stone-400 text-xs">🔍</span>
+          <div className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1.5 w-1/3 bg-white/70 backdrop-blur-xs">
+            <input 
+              type="text" 
+              placeholder="Buscar productos..." 
+              className="w-full bg-transparent focus:outline-none text-xs text-stone-700 placeholder-stone-500" 
+            />
+            <span className="text-stone-500 text-xs">🔍</span>
           </div>
 
           {/* Iconos */}
-          <div className="flex items-center space-x-5 text-stone-600">
-            <button className="hover:text-stone-900 transition text-sm flex items-center gap-1">👤 <span className="hidden sm:inline text-[11px] font-light tracking-wider">Cuenta</span></button>
+          <div className="flex items-center space-x-6 text-stone-700">
+            <button className="hover:text-stone-900 transition text-sm flex items-center gap-1.5">
+              👤 <span className="hidden sm:inline text-[11px] font-medium tracking-wider">Cuenta</span>
+            </button>
             <button className="hover:text-stone-900 transition relative text-sm">
               🛍️
               <span className="absolute -top-1.5 -right-1.5 bg-stone-900 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">0</span>
@@ -54,12 +59,12 @@ export default function Home() {
         </div>
 
         {/* Menú de Navegación */}
-        <nav className="border-t border-stone-100 max-w-6xl mx-auto px-6 py-3 flex justify-center space-x-8 text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b border-transparent hover:border-stone-900">Descubrir</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b border-transparent hover:border-stone-900">Cosméticos</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b border-transparent hover:border-stone-900">Skin Care</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b border-transparent hover:border-stone-900">Destacados</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b border-transparent hover:border-stone-900">Ayuda</a>
+        <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
+          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Descubrir</a>
+          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Cosméticos</a>
+          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Skin Care</a>
+          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Destacados</a>
+          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Ayuda</a>
         </nav>
       </header>
 
