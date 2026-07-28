@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import logoImg from '../assets/logo.jpeg';
 
+// Importaciones de Swiper
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, EffectFade, Pagination, Navigation } from 'swiper/modules';
+
+// Estilos de Swiper
+import 'swiper/css';
+import 'swiper/css/effect-fade';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
+// Carga automática de todas las imágenes .jpeg de la carpeta assets
+const imageModules = import.meta.glob('../assets/*.jpeg', { eager: true });
+
+// Convertimos los módulos en un array ordenado de rutas de imágenes
+const allImages = Object.keys(imageModules)
+  .sort((a, b) => {
+    // Orden numérico inteligente (1, 2, ..., 18)
+    const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
+    const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
+    return numA - numB;
+  })
+  .map((path) => imageModules[path].default)
+  .filter((img) => !img.includes('logo')); // Excluimos la imagen del logo
+
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
 
@@ -11,20 +35,22 @@ export default function Home() {
       .catch((err) => console.error("Error al cargar destacados:", err));
   }, []);
 
-  const lanzamientos = [
-    { id: 1, name: 'Línea Rostro', color: 'bg-rose-100/40 text-rose-700' },
-    { id: 2, name: 'Skin Care', color: 'bg-amber-100/40 text-amber-700' },
-    { id: 3, name: 'Labiales', color: 'bg-red-100/40 text-red-700' },
+  // Textos rotativos para dar variedad según la diapositiva
+  const slideTexts = [
+    { title: 'Cosmética Consciente & Natural', subtitle: 'Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.' },
+    { title: 'Nueva Colección Skin Care', subtitle: 'Nutrición profunda con ingredientes orgánicos seleccionados.' },
+    { title: 'Edición Limitada Labiales', subtitle: 'Tonos atemporales e hidratación duradera para cada momento.' },
+    { title: 'Ritual de Belleza Diario', subtitle: 'Siente la frescura y la suavidad que tu rostro merece.' },
+    { title: 'Esencia & Pureza', subtitle: 'Cuidado integral formulado para potenciar tu brillo natural.' },
   ];
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
 
-      {/* 1. HEADER & NAVBAR (Fondo mimetizado con el logo) */}
+      {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
         <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
           
-          {/* BRANDING: LOGO AGRANDADO + NOMBRE */}
           <div className="flex items-center gap-4">
             <img 
               src={logoImg} 
@@ -36,7 +62,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Buscador minimalista */}
           <div className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1.5 w-1/3 bg-white/70 backdrop-blur-xs">
             <input 
               type="text" 
@@ -46,7 +71,6 @@ export default function Home() {
             <span className="text-stone-500 text-xs">🔍</span>
           </div>
 
-          {/* Iconos */}
           <div className="flex items-center space-x-6 text-stone-700">
             <button className="hover:text-stone-900 transition text-sm flex items-center gap-1.5">
               👤 <span className="hidden sm:inline text-[11px] font-medium tracking-wider">Cuenta</span>
@@ -58,7 +82,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Menú de Navegación */}
         <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
           <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Descubrir</a>
           <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Cosméticos</a>
@@ -68,37 +91,59 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. HERO BANNER PRINCIPAL */}
-      <section className="w-full bg-stone-100 py-24 px-6 text-center border-b border-stone-200">
-        <div className="max-w-xl mx-auto space-y-5">
-          <span className="text-[10px] font-bold tracking-[0.25em] text-stone-400 uppercase block">Estética & Bienestar</span>
-          <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-900">Cosmética Consciente & Natural</h1>
-          <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed font-light">Fórmulas delicadas diseñadas para resaltar la pureza de tu piel de forma cotidiana.</p>
-          <div className="pt-3">
-            <button className="bg-stone-900 text-white text-[10px] tracking-[0.2em] uppercase px-8 py-3 hover:bg-stone-800 transition rounded-none">
-              Ver Catálogo
-            </button>
-          </div>
-        </div>
+      {/* 2. HERO BANNER VIVO CON LAS 18 FOTOS EN INTERVALOS */}
+      <section className="w-full relative overflow-hidden bg-stone-900">
+        <Swiper
+          modules={[Autoplay, EffectFade, Pagination, Navigation]}
+          effect="fade"
+          fadeEffect={{ crossFade: true }}
+          speed={1200}
+          autoplay={{
+            delay: 4000, // Cambia automáticamente cada 4 segundos
+            disableOnInteraction: false,
+          }}
+          loop={true}
+          pagination={{ clickable: true }}
+          navigation={true}
+          className="h-[380px] md:h-[520px] w-full"
+        >
+          {allImages.map((imgSrc, index) => {
+            const textInfo = slideTexts[index % slideTexts.length];
+            return (
+              <SwiperSlide key={index} className="relative w-full h-full">
+                <img 
+                  src={imgSrc} 
+                  alt={`Ámbar Cosmetics Slide ${index + 1}`} 
+                  className="w-full h-full object-cover object-center opacity-85"
+                />
+                
+                {/* Overlay sutil para legibilidad de texto */}
+                <div className="absolute inset-0 bg-stone-950/30 backdrop-brightness-95 flex items-center justify-center">
+                  <div className="max-w-xl mx-auto px-6 text-center space-y-4 text-white">
+                    <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase opacity-90 block drop-shadow-sm">
+                      Estética & Bienestar
+                    </span>
+                    <h1 className="text-3xl md:text-5xl font-light tracking-wide text-white drop-shadow-md">
+                      {textInfo.title}
+                    </h1>
+                    <p className="text-xs md:text-sm text-stone-200 max-w-md mx-auto leading-relaxed font-light drop-shadow-xs">
+                      {textInfo.subtitle}
+                    </p>
+                    <div className="pt-2">
+                      <button className="bg-white text-stone-900 text-[10px] md:text-xs font-medium tracking-[0.2em] uppercase px-8 py-3.5 hover:bg-stone-200 transition shadow-lg">
+                        Ver Catálogo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
       </section>
 
-      {/* 3. ÚLTIMOS LANZAMIENTOS */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Últimos lanzamientos</h2>
-        <div className="grid grid-cols-3 gap-6">
-          {lanzamientos.map((prod) => (
-            <div key={prod.id} className="text-center cursor-pointer group">
-              <div className={`${prod.color} h-32 md:h-44 rounded-xs flex items-center justify-center border border-stone-200/30 shadow-xs group-hover:scale-[1.01] transition duration-300`}>
-                <span className="text-xl opacity-50">✨</span>
-              </div>
-              <p className="mt-4 text-[10px] uppercase tracking-[0.15em] font-medium text-stone-700">{prod.name}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 4. COMPRA POR CATEGORÍA */}
-      <section className="max-w-5xl mx-auto px-6 py-6">
+      {/* 3. COMPRA POR CATEGORÍA */}
+      <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Compra por Categoría</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
@@ -113,8 +158,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. DESTACADOS DINÁMICOS */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
+      {/* 4. DESTACADOS DINÁMICOS */}
+      <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Productos Destacados</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {destacados.map((item) => (
@@ -134,9 +179,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. FOOTER */}
+      {/* 5. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
-        {/* Newsletter */}
         <div className="bg-stone-900 text-stone-100 py-12 px-6">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="space-y-1 text-center md:text-left">
@@ -150,7 +194,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Info Contacto */}
         <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-stone-500 font-light">
           <div className="space-y-3">
             <h4 className="font-bold uppercase tracking-wider text-stone-800 text-[10px]">Atención al Cliente</h4>
@@ -172,7 +215,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* 7. BOTÓN FLOTANTE WHATSAPP */}
+      {/* 6. BOTÓN FLOTANTE WHATSAPP */}
       <a 
         href="https://wa.me/5491123210838" 
         target="_blank" 
