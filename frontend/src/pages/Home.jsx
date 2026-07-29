@@ -66,22 +66,22 @@ export default function Home() {
 
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
-        <div className="max-w-6xl mx-auto px-6 py-2 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between items-center">
           
           <div className="flex items-center gap-4">
             {logoImg && (
               <img 
                 src={logoImg} 
                 alt="Logo Ámbar" 
-                className="h-20 md:h-24 w-auto object-contain mix-blend-multiply -my-2" 
+                className="h-16 md:h-20 w-auto object-contain mix-blend-multiply -my-1" 
               />
             )}
-            <div className="text-2xl md:text-3xl font-light tracking-[0.3em] text-stone-900">
+            <div className="text-xl md:text-2xl font-light tracking-[0.3em] text-stone-900">
               ÁMBAR
             </div>
           </div>
           
-          <div className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1.5 w-1/3 bg-white/70 backdrop-blur-xs">
+          <div className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1 w-1/3 bg-white/70 backdrop-blur-xs">
             <input 
               type="text" 
               placeholder="Buscar productos..." 
@@ -102,7 +102,7 @@ export default function Home() {
         </div>
 
         {/* MENÚ DE NAVEGACIÓN */}
-        <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 md:space-x-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
+        <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2 flex justify-center space-x-8 md:space-x-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
           <a href="#faciales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
             Cosméticos Faciales
           </a>
@@ -116,7 +116,7 @@ export default function Home() {
       </header>
 
       {/* 2. HERO BANNER */}
-      <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
+      <section className="w-full bg-[#ebe2db] pt-4 pb-5 border-b border-rose-200/40 shadow-inner">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
           
           <Swiper
@@ -132,8 +132,8 @@ export default function Home() {
             className="w-full"
           >
             {photoGroups.map((group, groupIndex) => (
-              <SwiperSlide key={groupIndex} className="pb-8">
-                <div className="grid grid-cols-3 gap-0 h-44 sm:h-52 md:h-60 overflow-hidden shadow-sm rounded-xs border border-stone-300/40">
+              <SwiperSlide key={groupIndex} className="pb-6">
+                <div className="grid grid-cols-3 gap-0 h-40 sm:h-48 md:h-56 overflow-hidden shadow-sm rounded-xs border border-stone-300/40">
                   {group.map((imgSrc, imgIndex) => (
                     <div 
                       key={imgIndex} 
@@ -152,18 +152,18 @@ export default function Home() {
             ))}
           </Swiper>
 
-          <div className="text-center space-y-2.5 pt-2">
+          <div className="text-center space-y-2 pt-1">
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-500 block">
               Estética & Bienestar
             </span>
-            <h1 className="text-2xl md:text-3xl font-light tracking-wide text-stone-800">
+            <h1 className="text-xl md:text-2xl font-light tracking-wide text-stone-800">
               Cosmética Consciente & Natural
             </h1>
             <p className="text-xs text-stone-600 max-w-md mx-auto font-light">
               Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
             </p>
-            <div className="pt-2">
-              <button className="bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-8 py-2.5 hover:bg-stone-800 transition shadow-xs">
+            <div className="pt-1">
+              <button className="bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-7 py-2 hover:bg-stone-800 transition shadow-xs">
                 Ver Catálogo
               </button>
             </div>
@@ -172,22 +172,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. COMPRA POR CATEGORÍA (CON IMÁGENES DE FONDO) */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">
+      {/* 3. COMPRA POR CATEGORÍA */}
+      <section className="max-w-5xl mx-auto px-6 py-6">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-5">
           Compra por Categoría
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* CATEGORÍA 1: FACIALES */}
-          <a href="#faciales" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <a href="#faciales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgFacial} 
               alt="Cosméticos Faciales" 
               className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
             />
-            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-3">
               <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
                 Cosméticos Faciales
               </span>
@@ -195,13 +195,13 @@ export default function Home() {
           </a>
 
           {/* CATEGORÍA 2: CORPORALES */}
-          <a href="#corporales" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <a href="#corporales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCorporal} 
               alt="Cosméticos Corporales" 
               className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
             />
-            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-3">
               <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
                 Cosméticos Corporales
               </span>
@@ -209,13 +209,13 @@ export default function Home() {
           </a>
 
           {/* CATEGORÍA 3: CAPILARES */}
-          <a href="#capilares" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <a href="#capilares" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCapilar} 
               alt="Cosméticos Capilares" 
               className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
             />
-            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-3">
               <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
                 Cosméticos Capilares
               </span>
@@ -226,18 +226,20 @@ export default function Home() {
       </section>
 
       {/* 4. PRODUCTOS DESTACADOS DINÁMICOS */}
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Productos Destacados</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <section className="max-w-5xl mx-auto px-6 py-6">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-5">
+          Productos Destacados
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {destacados.map((item) => (
-            <div key={item._id} className="bg-white border border-stone-200 p-6 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
-              <div className="h-44 w-full bg-stone-50 rounded-xs mb-5 overflow-hidden flex items-center justify-center">
+            <div key={item._id} className="bg-white border border-stone-200 p-5 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
+              <div className="h-40 w-full bg-stone-50 rounded-xs mb-4 overflow-hidden flex items-center justify-center">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
-                <p className="text-xs font-semibold text-stone-900 pb-2">${item.price?.toLocaleString('es-AR')}</p>
-                <button className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
+                <p className="text-xs font-semibold text-stone-900 pb-1">${item.price?.toLocaleString('es-AR')}</p>
+                <button className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
                   Agregar al carrito
                 </button>
               </div>
@@ -246,12 +248,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. BANNER PROMOCIONAL HORIZONTAL (UNIVERSAL PARA MÓVIL Y DESKTOP) */}
-      <section className="max-w-5xl mx-auto px-6 my-16">
-        <div className="bg-stone-900 border border-stone-800 rounded-xs shadow-xl overflow-hidden flex flex-col md:flex-row items-center">
+      {/* 5. BANNER PROMOCIONAL COMPACTO */}
+      <section className="max-w-5xl mx-auto px-6 my-6">
+        <div className="bg-stone-900 border border-stone-800 rounded-xs shadow-lg overflow-hidden flex flex-col md:flex-row items-center">
           
           {/* VIDEO PROMO */}
-          <div className="w-full md:w-1/2 h-64 md:h-72 bg-stone-950 relative overflow-hidden">
+          <div className="w-full md:w-1/2 h-52 md:h-56 bg-stone-950 relative overflow-hidden">
             <video
               autoPlay
               loop
@@ -265,18 +267,18 @@ export default function Home() {
           </div>
 
           {/* DETALLES DE PRODUCTO & BOTÓN */}
-          <div className="w-full md:w-1/2 p-8 md:p-12 text-center md:text-left flex flex-col justify-center items-center md:items-start space-y-4 text-white">
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-rose-200 block">
+          <div className="w-full md:w-1/2 p-6 md:p-8 text-center md:text-left flex flex-col justify-center items-center md:items-start space-y-3 text-white">
+            <span className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-rose-200 block">
               ★ EL MÁS PEDIDO ★
             </span>
-            <h3 className="text-xl md:text-2xl font-light tracking-widest uppercase text-stone-100">
+            <h3 className="text-lg md:text-xl font-light tracking-widest uppercase text-stone-100">
               Body Splash con Glitter
             </h3>
             <p className="text-xs text-stone-300 font-light leading-relaxed max-w-md">
               Aporta un brillo sutil deslumbrante y una fragancia envolvente que te acompaña durante todo el día.
             </p>
-            <div className="pt-2 w-full md:w-auto">
-              <button className="w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-3 px-8 text-[10px] font-bold uppercase tracking-[0.2em]">
+            <div className="pt-1 w-full md:w-auto">
+              <button className="w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-6 text-[10px] font-bold uppercase tracking-[0.2em]">
                 Ver Producto
               </button>
             </div>
@@ -289,8 +291,8 @@ export default function Home() {
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
         {/* NEWSLETTER BANNER */}
-        <div className="bg-stone-900 text-stone-100 py-12 px-6">
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="bg-stone-900 text-stone-100 py-8 px-6">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="space-y-1 text-center md:text-left">
               <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase">Newsletter Comunidad Ámbar</h3>
               <p className="text-xs text-stone-400 font-light">
@@ -311,9 +313,9 @@ export default function Home() {
         </div>
 
         {/* ATENCIÓN AL CLIENTE & REDES */}
-        <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-8 text-stone-600 font-light">
+        <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-stone-600 font-light">
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h4 className="font-bold uppercase tracking-wider text-stone-800 text-[10px]">Atención al Cliente</h4>
             <p className="flex items-center gap-2">
               📞 <a href="https://wa.me/5493482385840" target="_blank" rel="noreferrer" className="hover:text-stone-900 transition">+54 9 3482 38-5840</a>
@@ -326,7 +328,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="md:text-right space-y-3">
+          <div className="md:text-right space-y-2">
             <h4 className="font-bold uppercase tracking-wider text-stone-800 text-[10px]">Seguinos</h4>
             <div className="flex md:justify-end items-center">
               <a 
@@ -346,7 +348,7 @@ export default function Home() {
         </div>
 
         {/* COPYRIGHT */}
-        <div className="border-t border-stone-200 py-4 text-center text-[9px] text-stone-400 tracking-wider">
+        <div className="border-t border-stone-200 py-3 text-center text-[9px] text-stone-400 tracking-wider">
           © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
         </div>
       </footer>
