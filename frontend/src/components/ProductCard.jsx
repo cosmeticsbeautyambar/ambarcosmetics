@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { ProductContext } from '../context/ProductContext';
+import { ProductContext } from './ProductContext';
 
 export default function ProductCard({ product, saleMode }) {
   const { reduceStockOnSale } = useContext(ProductContext);

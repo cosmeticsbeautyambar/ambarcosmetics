@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { ProductContext } from '../context/ProductContext';
+import { ProductContext } from './ProductContext';
 
 export default function AdminPanel() {
   const { products, addProduct, updateStock, updatePrices, deleteProduct } = useContext(ProductContext);
