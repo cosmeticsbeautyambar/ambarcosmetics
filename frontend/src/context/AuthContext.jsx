@@ -5,9 +5,7 @@ export const AuthContext = createContext();
 // Limpieza profunda de la URL de la API
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  // Remueve corchetes, paréntesis, comillas y barras al final que puedan venir por error
   url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
-  // Asegura que siempre termine en /api
   if (!url.endsWith('/api')) {
     url += '/api';
   }
@@ -24,11 +22,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      // Intento principal a /auth/login
+      let res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password })
       });
+
+      // Fallback a /login directo si la API no usa el prefijo /auth
+      if (res.status === 404) {
+        res = await fetch(`${API_URL}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), password })
+        });
+      }
 
       const contentType = res.headers.get('content-type');
       let data = {};

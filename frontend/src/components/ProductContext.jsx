@@ -25,12 +25,16 @@ export function ProductProvider({ children }) {
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/products`);
-      if (res.ok) {
-        const contentType = res.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await res.json();
-          setProducts(data);
-        }
+      
+      if (!res.ok) {
+        console.warn(`Aviso al cargar productos: El servidor respondió con estado ${res.status}`);
+        return;
+      }
+
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        setProducts(data);
       }
     } catch (error) {
       console.error('Error al obtener productos:', error);
