@@ -9,6 +9,9 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+// IMPORTACIÓN DEL VIDEO DESDE SRC (Previene el error 404)
+import promoVideo from '../assets/banner-promo.mp4';
+
 // Carga dinámica del logo
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
@@ -47,47 +50,47 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/api/productos/destacados')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('API no disponible por el momento');
+        return res.json();
+      })
       .then((data) => setDestacados(data))
-      .catch((err) => console.error("Error al cargar destacados:", err));
+      .catch((err) => console.warn("Aviso:", err.message));
   }, []);
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
-      {/* BANNER LATERAL FLOTANTE "ÚLTIMO DESTACADO" */}
-      <div className="fixed top-28 right-4 z-40 hidden lg:block w-44 shadow-lg rounded-xs overflow-hidden border border-rose-200/80 bg-white/95 backdrop-blur-xs transition duration-300 hover:scale-105">
-        <div className="relative cursor-pointer">
-          
-          {/* Encabezado con el texto "ÚLTIMO DESTACADO" */}
-          <div className="py-2 px-1 text-center bg-stone-900 text-white">
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 block">
-              ★ Último Destacado
-            </span>
-          </div>
+      {/* BANNER LATERAL FLOTANTE "ÚLTIMO DESTACADO" (ALARGADO Y ESTILIZADO) */}
+      <aside className="fixed top-28 right-6 z-40 hidden xl:flex flex-col w-44 bg-white/90 backdrop-blur-md border border-rose-200/80 shadow-2xl rounded-xs overflow-hidden transition duration-300 hover:scale-[1.02]">
+        
+        {/* Encabezado */}
+        <div className="py-2 px-2 text-center bg-stone-900 text-white border-b border-stone-800">
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 block">
+            ★ Último Destacado
+          </span>
+        </div>
 
-          {/* Video en bucle estilo GIF */}
+        {/* Video Formato GIF Alargado */}
+        <div className="relative w-full aspect-[9/14] bg-stone-900 overflow-hidden">
           <video
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-52 object-cover"
+            className="w-full h-full object-cover"
           >
-            {/* Asegúrate de tener tu video en la carpeta public/ o ajustar la ruta */}
-            <source src="/banner-promo.mp4" type="video/mp4" />
-            Tu navegador no soporta el formato de video.
+            <source src={promoVideo} type="video/mp4" />
+            Tu navegador no soporta el video.
           </video>
-          
-          {/* Pie del banner */}
-          <div className="p-2 text-center bg-stone-100 border-t border-stone-200">
-            <span className="text-[10px] font-medium text-stone-700 tracking-wider uppercase block">
-              Ver Producto
-            </span>
-          </div>
-
         </div>
-      </div>
+
+        {/* Pie del Banner */}
+        <button className="w-full py-2.5 px-2 text-center bg-stone-900 text-stone-100 hover:bg-stone-800 transition text-[10px] font-medium tracking-[0.15em] uppercase">
+          Ver Producto
+        </button>
+
+      </aside>
 
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
@@ -140,7 +143,7 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. HERO BANNER - ESTÉTICA NUDE Y CÁLIDA */}
+      {/* 2. HERO BANNER */}
       <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
           
@@ -177,7 +180,6 @@ export default function Home() {
             ))}
           </Swiper>
 
-          {/* TEXTO Y BOTÓN FIJOS */}
           <div className="text-center space-y-2.5 pt-2">
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-500 block">
               Estética & Bienestar
