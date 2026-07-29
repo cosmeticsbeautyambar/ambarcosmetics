@@ -61,10 +61,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
-      {/* BANNER LATERAL ESTILO PUBLICITARIO ALARGADO */}
+      {/* 1. BANNER LATERAL PARA PANTALLAS GRANDES (DESKTOP) */}
       <aside className="fixed top-24 right-4 z-40 hidden xl:flex flex-col w-52 h-[600px] bg-white border border-rose-200/80 shadow-2xl rounded-xs overflow-hidden transition duration-300 hover:shadow-stone-400 hover:scale-[1.01]">
         
-        {/* ENCABEZADO CON LOS TÍTULOS SOLICITADOS */}
+        {/* ENCABEZADO */}
         <div className="py-3 px-2 text-center bg-stone-900 text-white shrink-0 z-10 space-y-1">
           <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-rose-200 block">
             ★ EL MÁS PEDIDO ★
@@ -74,7 +74,7 @@ export default function Home() {
           </h4>
         </div>
 
-        {/* CONTENEDOR DEL VIDEO (OCUPA TODO EL ALTO RESTANTE) */}
+        {/* CONTENEDOR DEL VIDEO */}
         <div className="relative w-full flex-1 bg-stone-900 overflow-hidden">
           <video
             autoPlay
@@ -95,7 +95,7 @@ export default function Home() {
 
       </aside>
 
-      {/* 1. HEADER & NAVBAR */}
+      {/* HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
         <div className="max-w-6xl mx-auto px-6 py-2 flex justify-between items-center">
           
@@ -146,7 +146,7 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. HERO BANNER */}
+      {/* HERO BANNER */}
       <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
           
@@ -203,7 +203,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. COMPRA POR CATEGORÍA */}
+      {/* COMPRA POR CATEGORÍA */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Compra por Categoría</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -219,7 +219,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. DESTACADOS DINÁMICOS */}
+      {/* PRODUCTOS DESTACADOS DINÁMICOS */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Productos Destacados</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -240,7 +240,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. FOOTER */}
+      {/* 2. BANNER DE VIDEO PROMOCIONAL EXCLUSIVO PARA MÓVILES (MÓVIL & TABLET) */}
+      <section className="block xl:hidden max-w-5xl mx-auto px-4 my-8">
+        <div className="bg-white border border-rose-200/80 rounded-xs shadow-md overflow-hidden flex flex-col sm:flex-row items-center">
+          
+          {/* VIDEO FORMATO HORIZONTAL ALARGADO */}
+          <div className="w-full sm:w-1/2 h-64 sm:h-52 bg-stone-900 relative overflow-hidden">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source src={promoVideo} type="video/mp4" />
+              Tu navegador no soporta el video.
+            </video>
+          </div>
+
+          {/* TEXTOS Y BOTÓN DE ACCIÓN */}
+          <div className="w-full sm:w-1/2 p-6 text-center flex flex-col justify-center items-center space-y-3 bg-stone-900 text-white">
+            <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-rose-200 block">
+              ★ EL MÁS PEDIDO ★
+            </span>
+            <h3 className="text-base font-light tracking-widest uppercase text-stone-100">
+              Body Splash con Glitter
+            </h3>
+            <p className="text-xs text-stone-300 font-light">
+              Aporta un brillo sutil y una fragancia única que dura todo el día.
+            </p>
+            <button className="mt-2 w-full max-w-xs bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-4 text-[10px] font-bold uppercase tracking-[0.2em]">
+              Ver Producto
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
         {/* NEWSLETTER BANNER */}
@@ -306,7 +343,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* 6. BOTÓN FLOTANTE WHATSAPP */}
+      {/* BOTÓN FLOTANTE WHATSAPP */}
       <a 
         href="https://wa.me/5493482385840" 
         target="_blank" 
