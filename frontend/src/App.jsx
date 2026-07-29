@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
 
-// Contexto Global de Productos y Stock
-import { ProductProvider } from './context/ProductContext';
+// Importación corregida desde ./components/
+import { ProductProvider } from './components/ProductContext';
 
-// Páginas y Componentes
+// Importaciones de Páginas y Componentes según tu árbol de archivos
 import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
-import AdminPanel from './pages/AdminPanel';
+import AdminPanel from './components/AdminPanel'; // <--- En src/components/
 
 export default function App() {
-  // Estado para cambiar de vista en la aplicación ('home', 'catalogo', 'admin')
   const [currentView, setCurrentView] = useState('home');
 
   return (
     <ProductProvider>
-      {/* BARRA DE NAVEGACIÓN SUPERIOR DE CONTROL */}
+      {/* NAVBAR DE CONTROL RÁPIDO */}
       <nav className="bg-stone-900 text-stone-300 py-2.5 px-4 text-xs font-semibold uppercase tracking-[0.15em] border-b border-stone-800 sticky top-0 z-[100] flex justify-between items-center shadow-md">
         
-        {/* LOGO O MARCA RÁPIDA */}
         <div 
           onClick={() => setCurrentView('home')} 
           className="cursor-pointer text-white hover:text-rose-200 transition flex items-center gap-1.5 font-bold"
@@ -26,7 +24,6 @@ export default function App() {
           <span>Ámbar Cosmetics</span>
         </div>
 
-        {/* SELECTOR DE PANTALLAS */}
         <div className="flex items-center space-x-3 sm:space-x-6 text-[10px] sm:text-xs">
           <button
             onClick={() => setCurrentView('home')}
@@ -64,7 +61,7 @@ export default function App() {
 
       </nav>
 
-      {/* RENDERIZADO DINÁMICO DE PANTALLAS */}
+      {/* RENDERIZADO DE PANTALLAS */}
       <main className="min-h-screen bg-stone-50">
         {currentView === 'home' && <Home />}
         {currentView === 'catalogo' && <Catalogo />}
