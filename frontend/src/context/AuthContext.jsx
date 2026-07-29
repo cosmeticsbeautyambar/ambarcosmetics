@@ -2,7 +2,19 @@ import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Limpieza profunda de la URL de la API
+const getCleanApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  // Remueve corchetes, paréntesis, comillas y barras al final que puedan venir por error
+  url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+  // Asegura que siempre termine en /api
+  if (!url.endsWith('/api')) {
+    url += '/api';
+  }
+  return url;
+};
+
+const API_URL = getCleanApiUrl();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -18,7 +30,6 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email: email.trim(), password })
       });
 
-      // Validamos si la respuesta viene vacía o no es JSON válido
       const contentType = res.headers.get('content-type');
       let data = {};
       
@@ -27,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (!res.ok) {
-        throw new Error(data.message || `Error del servidor (${res.status})`);
+        throw new Error(data.message || `Error en el servidor (${res.status})`);
       }
 
       setUser(data);
@@ -37,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Error en Login:', error);
       return { 
         success: false, 
-        message: error.message || 'No se pudo conectar con el servidor' 
+        message: error.message || 'No se pudo conectar con el servidor. Verificá si el backend terminó de despertar en Render.' 
       };
     }
   };

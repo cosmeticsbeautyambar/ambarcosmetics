@@ -3,7 +3,17 @@ import { AuthContext } from '../context/AuthContext';
 
 export const ProductContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Limpieza profunda de la URL de la API
+const getCleanApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url += '/api';
+  }
+  return url;
+};
+
+const API_URL = getCleanApiUrl();
 
 export function ProductProvider({ children }) {
   const [products, setProducts] = useState([]);
@@ -16,8 +26,11 @@ export function ProductProvider({ children }) {
       setLoading(true);
       const res = await fetch(`${API_URL}/products`);
       if (res.ok) {
-        const data = await res.json();
-        setProducts(data);
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          setProducts(data);
+        }
       }
     } catch (error) {
       console.error('Error al obtener productos:', error);
@@ -32,7 +45,7 @@ export function ProductProvider({ children }) {
 
   // Agregar nuevo producto (Requiere Token de la Dueña)
   const addProduct = async (newProduct) => {
-    if (!user || !user.token) return;
+    if (!user || !user.token) return { success: false, message: 'No estás autenticada' };
 
     try {
       const res = await fetch(`${API_URL}/products`, {
@@ -50,13 +63,17 @@ export function ProductProvider({ children }) {
         })
       });
 
+      const contentType = res.headers.get('content-type');
+      let data = {};
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      }
+
       if (res.ok) {
-        const createdProduct = await res.json();
-        setProducts((prev) => [createdProduct, ...prev]);
+        setProducts((prev) => [data, ...prev]);
         return { success: true };
       } else {
-        const errData = await res.json();
-        return { success: false, message: errData.message };
+        return { success: false, message: data.message || 'Error al guardar el producto' };
       }
     } catch (error) {
       return { success: false, message: 'Error al conectar con el servidor' };
@@ -132,7 +149,7 @@ export function ProductProvider({ children }) {
     }
   };
 
-  // Descontar stock local/remoto al vender
+  // Descontar stock al realizar una venta
   const reduceStockOnSale = async (id, qty = 1) => {
     const target = products.find((p) => p._id === id);
     if (!target) return;
