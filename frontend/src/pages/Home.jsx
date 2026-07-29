@@ -13,7 +13,7 @@ import 'swiper/css/navigation';
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
 
-// Carga de imágenes de productos (del 1 al 15)
+// Carga de imágenes de productos (del 1 al 12)
 const imageModules = import.meta.glob('../assets/*.{jpeg,jpg,png}', { eager: true });
 
 const allImages = Object.keys(imageModules)
@@ -22,7 +22,7 @@ const allImages = Object.keys(imageModules)
     const match = fileName.match(/^(\d+)\.(jpeg|jpg|png)$/i);
     if (!match) return false;
     const num = parseInt(match[1], 10);
-    return num >= 1 && num <= 15; // 15 fotos de productos
+    return num >= 1 && num <= 12; // Limitamos a 12 fotos
   })
   .sort((a, b) => {
     const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
@@ -31,7 +31,7 @@ const allImages = Object.keys(imageModules)
   })
   .map((path) => imageModules[path].default);
 
-// Agrupamos en 5 tríos exactos
+// Agrupamos en 4 tríos exactos
 const chunkArray = (array, chunkSize) => {
   const results = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -57,14 +57,14 @@ export default function Home() {
 
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
-        <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-6 py-2 flex justify-between items-center">
           
           <div className="flex items-center gap-4">
             {logoImg && (
               <img 
                 src={logoImg} 
                 alt="Logo Ámbar" 
-                className="h-14 md:h-16 w-auto object-contain mix-blend-multiply" 
+                className="h-20 md:h-24 w-auto object-contain mix-blend-multiply -my-2" 
               />
             )}
             <div className="text-2xl md:text-3xl font-light tracking-[0.3em] text-stone-900">
