@@ -108,7 +108,7 @@ export default function App() {
             <div className="max-w-md mx-auto my-16 p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-stone-200">
               <div className="text-center mb-6">
                 <span className="text-4xl">🔐</span>
-                <h2 className="text-xl font-bold text-stone-800 mt-2">Acceso Exclusivo Dueña</h2>
+                <h2 className="text-xl font-bold text-stone-800 mt-2">Acceso Exclusivo</h2>
                 <p className="text-xs text-stone-500 mt-1">Ingresá tus credenciales para gestionar stock y precios.</p>
               </div>
 

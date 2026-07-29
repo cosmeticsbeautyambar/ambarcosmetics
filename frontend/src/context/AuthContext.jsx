@@ -10,26 +10,35 @@ export const AuthProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Login real conectado al Backend
   const login = async (email, password) => {
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.trim(), password })
       });
 
-      const data = await res.json();
+      // Validamos si la respuesta viene vacía o no es JSON válido
+      const contentType = res.headers.get('content-type');
+      let data = {};
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      }
 
       if (!res.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
+        throw new Error(data.message || `Error del servidor (${res.status})`);
       }
 
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.message };
+      console.error('Error en Login:', error);
+      return { 
+        success: false, 
+        message: error.message || 'No se pudo conectar con el servidor' 
+      };
     }
   };
 
