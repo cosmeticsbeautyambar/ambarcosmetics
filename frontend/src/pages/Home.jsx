@@ -15,6 +15,18 @@ import imgFacial from '../assets/facial.png';
 import imgCorporal from '../assets/corporal.png';
 import imgCapilar from '../assets/capilar.png';
 
+// Obtenemos la URL de la API sanitizada
+const getCleanApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url += '/api';
+  }
+  return url;
+};
+
+const API_URL = getCleanApiUrl();
+
 // Carga dinámica del logo
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
@@ -52,7 +64,8 @@ export default function Home() {
   const [destacados, setDestacados] = useState([]);
 
   useEffect(() => {
-    fetch('/api/productos/destacados')
+    // Llamada corregida a la API con la URL sanitizada y endpoint /products/destacados
+    fetch(`${API_URL}/products/destacados`)
       .then((res) => {
         if (!res.ok) throw new Error('API no disponible por el momento');
         return res.json();
@@ -247,7 +260,7 @@ export default function Home() {
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
-                <p className="text-xs font-semibold text-stone-900 pb-1">${item.price?.toLocaleString('es-AR')}</p>
+                <p className="text-xs font-semibold text-stone-900 pb-1">${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}</p>
                 <button className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
                   Agregar al carrito
                 </button>
@@ -299,7 +312,7 @@ export default function Home() {
       {/* 6. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
-        {/* BANNER PROMOCIONAL DE DESCUENTOS (REEMPLAZA AL NEWSLETTER) */}
+        {/* BANNER PROMOCIONAL DE DESCUENTOS */}
         <div className="bg-stone-900 text-stone-100 py-6 px-6">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="flex items-center gap-3">
@@ -357,9 +370,17 @@ export default function Home() {
 
         </div>
 
-        {/* COPYRIGHT */}
-        <div className="border-t border-stone-200 py-3 text-center text-[9px] text-stone-400 tracking-wider">
-          © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
+        {/* COPYRIGHT & CRÉDITOS GALMATECH */}
+        <div className="border-t border-stone-200 py-4 text-center text-[9px] text-stone-400 tracking-wider space-y-1">
+          <div>
+            © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
+          </div>
+          <div className="text-[10px] font-medium text-stone-500">
+            Desarrollado con 🤍 por{' '}
+            <span className="text-stone-800 font-bold tracking-widest hover:text-rose-500 transition cursor-pointer">
+              GalmaTech
+            </span>
+          </div>
         </div>
       </footer>
 
