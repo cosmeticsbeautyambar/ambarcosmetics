@@ -9,7 +9,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// Carga dinámica del logo (funciona con .png, .jpeg, .jpg, etc.)
+// Carga dinámica del logo
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
 
@@ -22,7 +22,7 @@ const allImages = Object.keys(imageModules)
     const match = fileName.match(/^(\d+)\.(jpeg|jpg|png)$/i);
     if (!match) return false;
     const num = parseInt(match[1], 10);
-    return num >= 1 && num <= 12; // 12 fotos de productos
+    return num >= 1 && num <= 12;
   })
   .sort((a, b) => {
     const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
@@ -31,7 +31,7 @@ const allImages = Object.keys(imageModules)
   })
   .map((path) => imageModules[path].default);
 
-// Agrupamos en 4 tríos exactos
+// Agrupamos en tríos
 const chunkArray = (array, chunkSize) => {
   const results = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -92,12 +92,17 @@ export default function Home() {
           </div>
         </div>
 
-        <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Descubrir</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Cosméticos</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Skin Care</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Destacados</a>
-          <a href="#" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">Ayuda</a>
+        {/* MENÚ DE NAVEGACIÓN ACTUALIZADO */}
+        <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 md:space-x-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
+          <a href="#faciales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+            Cosméticos Faciales
+          </a>
+          <a href="#corporales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+            Cosméticos Corporales
+          </a>
+          <a href="#capilares" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+            Cosméticos Capilares
+          </a>
         </nav>
       </header>
 
@@ -159,18 +164,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. COMPRA POR CATEGORÍA */}
+      {/* 3. COMPRA POR CATEGORÍA ACTUALIZADA */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Compra por Categoría</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Rostro</span>
+            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Faciales</span>
           </div>
           <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Skin Care</span>
+            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Corporales</span>
           </div>
           <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Labios</span>
+            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Capilares</span>
           </div>
         </div>
       </section>
@@ -196,7 +201,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. FOOTER ACTUALIZADO */}
+      {/* 5. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
         {/* NEWSLETTER BANNER */}
@@ -262,7 +267,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* 6. BOTÓN FLOTANTE WHATSAPP CON TELÉFONO ACTUALIZADO */}
+      {/* 6. BOTÓN FLOTANTE WHATSAPP */}
       <a 
         href="https://wa.me/5493482385840" 
         target="_blank" 
