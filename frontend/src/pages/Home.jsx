@@ -53,7 +53,41 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
+    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
+
+      {/* BANNER LATERAL FLOTANTE "ÚLTIMO DESTACADO" */}
+      <div className="fixed top-28 right-4 z-40 hidden lg:block w-44 shadow-lg rounded-xs overflow-hidden border border-rose-200/80 bg-white/95 backdrop-blur-xs transition duration-300 hover:scale-105">
+        <div className="relative cursor-pointer">
+          
+          {/* Encabezado con el texto "ÚLTIMO DESTACADO" */}
+          <div className="py-2 px-1 text-center bg-stone-900 text-white">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 block">
+              ★ Último Destacado
+            </span>
+          </div>
+
+          {/* Video en bucle estilo GIF */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-52 object-cover"
+          >
+            {/* Asegúrate de tener tu video en la carpeta public/ o ajustar la ruta */}
+            <source src="/banner-promo.mp4" type="video/mp4" />
+            Tu navegador no soporta el formato de video.
+          </video>
+          
+          {/* Pie del banner */}
+          <div className="p-2 text-center bg-stone-100 border-t border-stone-200">
+            <span className="text-[10px] font-medium text-stone-700 tracking-wider uppercase block">
+              Ver Producto
+            </span>
+          </div>
+
+        </div>
+      </div>
 
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
@@ -92,7 +126,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* MENÚ DE NAVEGACIÓN ACTUALIZADO */}
+        {/* MENÚ DE NAVEGACIÓN */}
         <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2.5 flex justify-center space-x-8 md:space-x-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
           <a href="#faciales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
             Cosméticos Faciales
@@ -164,7 +198,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. COMPRA POR CATEGORÍA ACTUALIZADA */}
+      {/* 3. COMPRA POR CATEGORÍA */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Compra por Categoría</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
