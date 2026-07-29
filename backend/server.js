@@ -45,6 +45,9 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 
+// ALIAS para evitar 404 si el frontend llama a /api/login directamente
+app.use('/api', require('./routes/authRoutes'));
+
 app.get('/', (req, res) => {
     res.send('El servidor de Ámbar Cosmetics está funcionando correctamente 🚀');
 });
