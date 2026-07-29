@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.jpeg';
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -13,17 +13,23 @@ import 'swiper/css/navigation';
 // Carga automática de todas las imágenes .jpeg de assets
 const imageModules = import.meta.glob('../assets/*.jpeg', { eager: true });
 
-// Convertimos los módulos en un array ordenado de rutas de imágenes
+// Filtramos únicamente de la 1.jpeg a la 15.jpeg y las ordenamos
 const allImages = Object.keys(imageModules)
+  .filter((path) => {
+    const fileName = path.split('/').pop();
+    const match = fileName.match(/^(\d+)\.jpeg$/i);
+    if (!match) return false;
+    const num = parseInt(match[1], 10);
+    return num >= 1 && num <= 15; // Exactamente 15 fotos
+  })
   .sort((a, b) => {
     const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
     const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
     return numA - numB;
   })
-  .map((path) => imageModules[path].default)
-  .filter((img) => !img.includes('logo')); // Excluimos la imagen del logo
+  .map((path) => imageModules[path].default);
 
-// Agrupamos las 18 fotos en grupos de 3 para cada Slide (6 diapositivas en total)
+// Agrupamos en 5 tríos exactos (15 fotos)
 const chunkArray = (array, chunkSize) => {
   const results = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -43,15 +49,6 @@ export default function Home() {
       .then((data) => setDestacados(data))
       .catch((err) => console.error("Error al cargar destacados:", err));
   }, []);
-
-  const slideTexts = [
-    { title: 'Cosmética Consciente & Natural', subtitle: 'Fórmulas delicadas para resaltar la pureza de tu piel.' },
-    { title: 'Nueva Colección Skin Care', subtitle: 'Nutrición profunda con ingredientes orgánicos.' },
-    { title: 'Edición Limitada Labiales', subtitle: 'Tonos atemporales e hidratación duradera.' },
-    { title: 'Ritual de Belleza Diario', subtitle: 'Siente la frescura y la suavidad que tu rostro merece.' },
-    { title: 'Esencia & Pureza', subtitle: 'Cuidado integral para potenciar tu brillo natural.' },
-    { title: 'Línea Exclusiva Ámbar', subtitle: 'Texturas ligeras que transforman tu rutina.' },
-  ];
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased">
@@ -100,14 +97,15 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. BANNER VIVO EN Mosaico (3 FOTOS APILADAS EN PARALELO) */}
-      <section className="w-full bg-stone-900 py-6 md:py-8 border-b border-stone-200 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4">
+      {/* 2. HERO BANNER - NUDE & WARM AMBIENTE */}
+      <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
+        <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
+          
           <Swiper
             modules={[Autoplay, Pagination, Navigation]}
-            speed={1000}
+            speed={1100}
             autoplay={{
-              delay: 4500,
+              delay: 3800,
               disableOnInteraction: false,
             }}
             loop={true}
@@ -115,44 +113,46 @@ export default function Home() {
             navigation={true}
             className="w-full"
           >
-            {photoGroups.map((group, groupIndex) => {
-              const textInfo = slideTexts[groupIndex % slideTexts.length];
-              return (
-                <SwiperSlide key={groupIndex} className="pb-10">
-                  <div className="flex flex-col gap-6">
-                    
-                    {/* Grilla de 3 imágenes alineadas */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 h-[350px] md:h-[420px]">
-                      {group.map((imgSrc, imgIndex) => (
-                        <div key={imgIndex} className="relative w-full h-full rounded-xs overflow-hidden bg-stone-800 group shadow-md">
-                          <img 
-                            src={imgSrc} 
-                            alt={`Ámbar foto ${groupIndex * 3 + imgIndex + 1}`} 
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700 ease-out"
-                          />
-                          <div className="absolute inset-0 bg-stone-900/10 group-hover:bg-transparent transition duration-300" />
-                        </div>
-                      ))}
+            {photoGroups.map((group, groupIndex) => (
+              <SwiperSlide key={groupIndex} className="pb-8">
+                {/* 3 Fotos enmarcadas armoniosamente sin fondo oscuro */}
+                <div className="grid grid-cols-3 gap-0 h-44 sm:h-52 md:h-60 overflow-hidden shadow-sm rounded-xs border border-stone-300/40">
+                  {group.map((imgSrc, imgIndex) => (
+                    <div 
+                      key={imgIndex} 
+                      className="relative w-full h-full overflow-hidden group cursor-pointer border-r border-stone-200/60 last:border-r-0"
+                    >
+                      <img 
+                        src={imgSrc} 
+                        alt={`Ámbar foto ${groupIndex * 3 + imgIndex + 1}`} 
+                        className="w-full h-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-in-out"
+                      />
+                      <div className="absolute inset-0 bg-stone-900/5 group-hover:bg-transparent transition duration-300 pointer-events-none" />
                     </div>
-
-                    {/* Texto informativo de la colección centralizado bajo las 3 imágenes */}
-                    <div className="text-center space-y-2 py-2">
-                      <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-400 block">
-                        Estética & Bienestar
-                      </span>
-                      <h2 className="text-xl md:text-2xl font-light tracking-wide text-white">
-                        {textInfo.title}
-                      </h2>
-                      <p className="text-xs text-stone-300 max-w-md mx-auto font-light">
-                        {textInfo.subtitle}
-                      </p>
-                    </div>
-
-                  </div>
-                </SwiperSlide>
-              );
-            })}
+                  ))}
+                </div>
+              </SwiperSlide>
+            ))}
           </Swiper>
+
+          {/* TEXTO Y BOTÓN FIJOS CON TONOS CÁLIDOS DE ÁMBAR */}
+          <div className="text-center space-y-2.5 pt-2">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-500 block">
+              Estética & Bienestar
+            </span>
+            <h1 className="text-2xl md:text-3xl font-light tracking-wide text-stone-800">
+              Cosmética Consciente & Natural
+            </h1>
+            <p className="text-xs text-stone-600 max-w-md mx-auto font-light">
+              Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
+            </p>
+            <div className="pt-2">
+              <button className="bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-8 py-2.5 hover:bg-stone-800 transition shadow-xs">
+                Ver Catálogo
+              </button>
+            </div>
+          </div>
+
         </div>
       </section>
 
