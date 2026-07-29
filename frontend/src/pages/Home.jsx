@@ -9,8 +9,11 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// IMPORTACIÓN DEL VIDEO DESDE SRC (Previene el error 404)
+// IMPORTACIÓN DE MULTIMEDIA DESDE SRC/ASSETS
 import promoVideo from '../assets/banner-promo.mp4';
+import imgFacial from '../assets/facial.png';
+import imgCorporal from '../assets/corporal.png';
+import imgCapilar from '../assets/capilar.png';
 
 // Carga dinámica del logo
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
@@ -61,41 +64,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
-      {/* 1. BANNER LATERAL PARA PANTALLAS GRANDES (DESKTOP) */}
-      <aside className="fixed top-24 right-4 z-40 hidden xl:flex flex-col w-52 h-[600px] bg-white border border-rose-200/80 shadow-2xl rounded-xs overflow-hidden transition duration-300 hover:shadow-stone-400 hover:scale-[1.01]">
-        
-        {/* ENCABEZADO */}
-        <div className="py-3 px-2 text-center bg-stone-900 text-white shrink-0 z-10 space-y-1">
-          <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-rose-200 block">
-            ★ EL MÁS PEDIDO ★
-          </span>
-          <h4 className="text-[11px] font-light tracking-widest text-stone-100 uppercase">
-            Body Splash con Glitter
-          </h4>
-        </div>
-
-        {/* CONTENEDOR DEL VIDEO */}
-        <div className="relative w-full flex-1 bg-stone-900 overflow-hidden">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover object-center"
-          >
-            <source src={promoVideo} type="video/mp4" />
-            Tu navegador no soporta el video.
-          </video>
-        </div>
-
-        {/* BOTÓN INFERIOR */}
-        <button className="w-full py-3.5 px-2 text-center bg-stone-900 hover:bg-stone-800 text-stone-100 transition text-[10px] font-semibold tracking-[0.2em] uppercase shrink-0 border-t border-stone-800">
-          Ver Producto
-        </button>
-
-      </aside>
-
-      {/* HEADER & NAVBAR */}
+      {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
         <div className="max-w-6xl mx-auto px-6 py-2 flex justify-between items-center">
           
@@ -146,7 +115,7 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* HERO BANNER */}
+      {/* 2. HERO BANNER */}
       <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
           
@@ -203,23 +172,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* COMPRA POR CATEGORÍA */}
+      {/* 3. COMPRA POR CATEGORÍA (CON IMÁGENES DE FONDO) */}
       <section className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Compra por Categoría</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Faciales</span>
-          </div>
-          <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Corporales</span>
-          </div>
-          <div className="h-28 bg-white border border-stone-200 rounded-xs flex items-center justify-center cursor-pointer hover:bg-stone-100 hover:border-stone-300 transition duration-300 shadow-xs">
-            <span className="text-[11px] font-medium tracking-[0.2em] uppercase text-stone-600">Cosméticos Capilares</span>
-          </div>
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">
+          Compra por Categoría
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* CATEGORÍA 1: FACIALES */}
+          <a href="#faciales" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+            <img 
+              src={imgFacial} 
+              alt="Cosméticos Faciales" 
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
+            />
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+              <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
+                Cosméticos Faciales
+              </span>
+            </div>
+          </a>
+
+          {/* CATEGORÍA 2: CORPORALES */}
+          <a href="#corporales" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+            <img 
+              src={imgCorporal} 
+              alt="Cosméticos Corporales" 
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
+            />
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+              <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
+                Cosméticos Corporales
+              </span>
+            </div>
+          </a>
+
+          {/* CATEGORÍA 3: CAPILARES */}
+          <a href="#capilares" className="relative h-32 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+            <img 
+              src={imgCapilar} 
+              alt="Cosméticos Capilares" 
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 ease-out"
+            />
+            <div className="absolute inset-0 bg-stone-900/40 group-hover:bg-stone-900/30 transition duration-300 flex items-center justify-center p-4">
+              <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white drop-shadow-md text-center">
+                Cosméticos Capilares
+              </span>
+            </div>
+          </a>
+
         </div>
       </section>
 
-      {/* PRODUCTOS DESTACADOS DINÁMICOS */}
+      {/* 4. PRODUCTOS DESTACADOS DINÁMICOS */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-12">Productos Destacados</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -240,12 +246,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. BANNER DE VIDEO PROMOCIONAL EXCLUSIVO PARA MÓVILES (MÓVIL & TABLET) */}
-      <section className="block xl:hidden max-w-5xl mx-auto px-4 my-8">
-        <div className="bg-white border border-rose-200/80 rounded-xs shadow-md overflow-hidden flex flex-col sm:flex-row items-center">
+      {/* 5. BANNER PROMOCIONAL HORIZONTAL (UNIVERSAL PARA MÓVIL Y DESKTOP) */}
+      <section className="max-w-5xl mx-auto px-6 my-16">
+        <div className="bg-stone-900 border border-stone-800 rounded-xs shadow-xl overflow-hidden flex flex-col md:flex-row items-center">
           
-          {/* VIDEO FORMATO HORIZONTAL ALARGADO */}
-          <div className="w-full sm:w-1/2 h-64 sm:h-52 bg-stone-900 relative overflow-hidden">
+          {/* VIDEO PROMO */}
+          <div className="w-full md:w-1/2 h-64 md:h-72 bg-stone-950 relative overflow-hidden">
             <video
               autoPlay
               loop
@@ -258,26 +264,28 @@ export default function Home() {
             </video>
           </div>
 
-          {/* TEXTOS Y BOTÓN DE ACCIÓN */}
-          <div className="w-full sm:w-1/2 p-6 text-center flex flex-col justify-center items-center space-y-3 bg-stone-900 text-white">
-            <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-rose-200 block">
+          {/* DETALLES DE PRODUCTO & BOTÓN */}
+          <div className="w-full md:w-1/2 p-8 md:p-12 text-center md:text-left flex flex-col justify-center items-center md:items-start space-y-4 text-white">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-rose-200 block">
               ★ EL MÁS PEDIDO ★
             </span>
-            <h3 className="text-base font-light tracking-widest uppercase text-stone-100">
+            <h3 className="text-xl md:text-2xl font-light tracking-widest uppercase text-stone-100">
               Body Splash con Glitter
             </h3>
-            <p className="text-xs text-stone-300 font-light">
-              Aporta un brillo sutil y una fragancia única que dura todo el día.
+            <p className="text-xs text-stone-300 font-light leading-relaxed max-w-md">
+              Aporta un brillo sutil deslumbrante y una fragancia envolvente que te acompaña durante todo el día.
             </p>
-            <button className="mt-2 w-full max-w-xs bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-4 text-[10px] font-bold uppercase tracking-[0.2em]">
-              Ver Producto
-            </button>
+            <div className="pt-2 w-full md:w-auto">
+              <button className="w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-3 px-8 text-[10px] font-bold uppercase tracking-[0.2em]">
+                Ver Producto
+              </button>
+            </div>
           </div>
 
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* 6. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
         {/* NEWSLETTER BANNER */}
@@ -343,7 +351,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* BOTÓN FLOTANTE WHATSAPP */}
+      {/* 7. BOTÓN FLOTANTE WHATSAPP */}
       <a 
         href="https://wa.me/5493482385840" 
         target="_blank" 
