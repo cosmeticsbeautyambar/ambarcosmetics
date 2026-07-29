@@ -61,32 +61,35 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
-      {/* BANNER LATERAL FLOTANTE "ÚLTIMO DESTACADO" (ALARGADO Y ESTILIZADO) */}
-      <aside className="fixed top-28 right-6 z-40 hidden xl:flex flex-col w-44 bg-white/90 backdrop-blur-md border border-rose-200/80 shadow-2xl rounded-xs overflow-hidden transition duration-300 hover:scale-[1.02]">
+      {/* BANNER LATERAL ESTILO PUBLICITARIO ALARGADO */}
+      <aside className="fixed top-24 right-4 z-40 hidden xl:flex flex-col w-52 h-[600px] bg-white border border-rose-200/80 shadow-2xl rounded-xs overflow-hidden transition duration-300 hover:shadow-stone-400 hover:scale-[1.01]">
         
-        {/* Encabezado */}
-        <div className="py-2 px-2 text-center bg-stone-900 text-white border-b border-stone-800">
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 block">
-            ★ Último Destacado
+        {/* ENCABEZADO CON LOS TÍTULOS SOLICITADOS */}
+        <div className="py-3 px-2 text-center bg-stone-900 text-white shrink-0 z-10 space-y-1">
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-rose-200 block">
+            ★ EL MÁS PEDIDO ★
           </span>
+          <h4 className="text-[11px] font-light tracking-widest text-stone-100 uppercase">
+            Body Splash con Glitter
+          </h4>
         </div>
 
-        {/* Video Formato GIF Alargado */}
-        <div className="relative w-full aspect-[9/14] bg-stone-900 overflow-hidden">
+        {/* CONTENEDOR DEL VIDEO (OCUPA TODO EL ALTO RESTANTE) */}
+        <div className="relative w-full flex-1 bg-stone-900 overflow-hidden">
           <video
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           >
             <source src={promoVideo} type="video/mp4" />
             Tu navegador no soporta el video.
           </video>
         </div>
 
-        {/* Pie del Banner */}
-        <button className="w-full py-2.5 px-2 text-center bg-stone-900 text-stone-100 hover:bg-stone-800 transition text-[10px] font-medium tracking-[0.15em] uppercase">
+        {/* BOTÓN INFERIOR */}
+        <button className="w-full py-3.5 px-2 text-center bg-stone-900 hover:bg-stone-800 text-stone-100 transition text-[10px] font-semibold tracking-[0.2em] uppercase shrink-0 border-t border-stone-800">
           Ver Producto
         </button>
 
