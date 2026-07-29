@@ -64,6 +64,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
+      {/* 0. BARRA SUPERIOR DE ANUNCIOS / PROMO */}
+      <div className="bg-stone-900 text-stone-100 py-1.5 px-4 text-center text-[10px] md:text-xs font-medium tracking-wider uppercase flex justify-center items-center gap-2">
+        <span>✨</span>
+        <span>
+          <strong>10% OFF</strong> en tu primera compra o en compras a partir de <strong>$50.000</strong>
+        </span>
+        <span>✨</span>
+      </div>
+
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between items-center">
@@ -290,25 +299,26 @@ export default function Home() {
       {/* 6. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
         
-        {/* NEWSLETTER BANNER */}
-        <div className="bg-stone-900 text-stone-100 py-8 px-6">
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="space-y-1 text-center md:text-left">
-              <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase">Newsletter Comunidad Ámbar</h3>
-              <p className="text-xs text-stone-400 font-light">
-                Suscribite para recibir novedades exclusivas y un <strong className="text-white font-medium">10% OFF en tu primera compra</strong> o en <strong className="text-white font-medium">compras a partir de $50.000</strong>.
-              </p>
+        {/* BANNER PROMOCIONAL DE DESCUENTOS (REEMPLAZA AL NEWSLETTER) */}
+        <div className="bg-stone-900 text-stone-100 py-6 px-6">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🎁</span>
+              <div>
+                <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase text-rose-200">
+                  Descuentos Especiales Ámbar
+                </h3>
+                <p className="text-xs text-stone-300 font-light mt-0.5">
+                  Aprovechá un <span className="text-white font-semibold underline underline-offset-2">10% OFF</span> en tu primera compra o al superar los <span className="text-white font-semibold">$50.000</span>.
+                </p>
+              </div>
             </div>
-            <div className="flex w-full md:w-auto gap-2">
-              <input 
-                type="email" 
-                placeholder="Tu dirección de email" 
-                className="px-3 py-2 bg-stone-800 text-white text-xs border border-stone-700 rounded-none focus:outline-none w-full md:w-60 placeholder-stone-500" 
-              />
-              <button className="bg-white text-stone-900 px-5 py-2 text-[10px] font-bold uppercase tracking-wider hover:bg-stone-200 transition">
-                Unirme
-              </button>
-            </div>
+            <a 
+              href="#catalogo" 
+              className="bg-white text-stone-900 px-6 py-2 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-stone-200 transition shrink-0"
+            >
+              Aprovechar Descuento
+            </a>
           </div>
         </div>
 
