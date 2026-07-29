@@ -1,38 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { ProductContext } from '../context/ProductContext';
 import ProductCard from '../components/ProductCard';
 
-// Datos de prueba locales
-const MOCK_PRODUCTS = [
-  { _id: '1', name: 'Labial Matte Velvet', description: 'Color intenso de larga duración.', price: 1200, category: 'Labios', image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500' },
-  { _id: '2', name: 'Máscara pestañas HD', description: 'Volumen extremo a prueba de agua.', price: 1500, category: 'Ojos', image: 'https://images.unsplash.com/photo-1631214524020-5e18d9765176?w=500' },
-  { _id: '3', name: 'Base Fluida Hidratante', description: 'Cobertura media con acabado natural.', price: 2200, category: 'Rostro', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500' },
-];
-
 export default function Catalogo() {
-  const [search, setSearch] = useState('');
+  const { products } = useContext(ProductContext);
 
-  const filteredProducts = MOCK_PRODUCTS.filter(product =>
-    product.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // MODO DE COMPRA: 'minorista' | 'mayorista'
+  const [saleMode, setSaleMode] = useState('minorista');
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Todas');
+
+  // Filtrado de productos por búsqueda y categoría
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+                          p.description?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'Todas' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div>
-      <div className="mb-8 max-w-md mx-auto">
-        <input 
-          type="text" 
-          placeholder="🔍 Buscar cosmético (Ej: Labial...)" 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-500"
-        />
-      </div>
+    <div className="min-h-screen bg-stone-50 py-8 px-4 sm:px-6 max-w-6xl mx-auto font-sans text-stone-800">
       
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Nuestro Catálogo</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {filteredProducts.map(product => (
-          <ProductCard key={product._id} product={product} />
-        ))}
+      {/* 1. SELECTOR INTERACTIVO VENTA MINORISTA / MAYORISTA */}
+      <div className="bg-white border border-stone-200 p-4 mb-8 shadow-xs rounded-xs text-center">
+        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400 mb-3">
+          Modalidad de Compra
+        </p>
+
+        <div className="inline-flex p-1 bg-stone-100 rounded-none border border-stone-200">
+          <button
+            onClick={() => setSaleMode('minorista')}
+            className={`px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition ${
+              saleMode === 'minorista'
+                ? 'bg-stone-900 text-white shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            🛒 Venta Minorista
+          </button>
+          
+          <button
+            onClick={() => setSaleMode('mayorista')}
+            className={`px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition ${
+              saleMode === 'mayorista'
+                ? 'bg-stone-900 text-white shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            📦 Venta Mayorista
+          </button>
+        </div>
+
+        {/* NOTA ACLARATORIA SEGÚN EL MODO SELECCIONADO */}
+        <div className="mt-3 text-xs font-light text-stone-600">
+          {saleMode === 'minorista' ? (
+            <p>Comprá desde 1 unidad con despacho a todo el país.</p>
+          ) : (
+            <p className="text-rose-700 font-normal">
+              🔥 <strong>Modo Mayorista Activado:</strong> Precios diferenciados para revendedoras aplicando las cantidades mínimas indicadas por producto.
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* 2. FILTROS Y BUSCADOR */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 border-b border-stone-200 pb-5">
+        
+        {/* BUSCADOR */}
+        <div className="w-full md:w-80 relative">
+          <input 
+            type="text"
+            placeholder="Buscar por nombre o extracto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-3 pr-8 py-2 border border-stone-300 bg-white text-xs text-stone-700 focus:outline-none focus:border-stone-800"
+          />
+          <span className="absolute right-2.5 top-2.5 text-xs text-stone-400">🔍</span>
+        </div>
+
+        {/* CATEGORÍAS */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {['Todas', 'Faciales', 'Corporales', 'Capilares'].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] border transition ${
+                selectedCategory === cat
+                  ? 'border-stone-900 bg-stone-900 text-white'
+                  : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+      </div>
+
+      {/* 3. GRILLA DE PRODUCTOS DINÁMICA */}
+      {filteredProducts.length === 0 ? (
+        <div className="text-center py-16 bg-white border border-stone-200">
+          <p className="text-xs text-stone-500 uppercase tracking-widest">
+            No se encontraron productos en esta categoría o búsqueda.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard 
+              key={product._id} 
+              product={product} 
+              saleMode={saleMode} 
+            />
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
