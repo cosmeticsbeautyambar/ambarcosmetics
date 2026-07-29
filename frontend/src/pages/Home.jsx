@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import logoImg from '../assets/logo.jpeg';
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -10,17 +9,20 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// Carga automática de todas las imágenes .jpeg de assets
-const imageModules = import.meta.glob('../assets/*.jpeg', { eager: true });
+// Carga dinámica del logo (funciona automáticamente si es .png, .jpeg, .jpg, etc.)
+const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
+const logoImg = Object.values(logoModules)[0]?.default || '';
 
-// Filtramos únicamente de la 1.jpeg a la 15.jpeg y las ordenamos
+// Carga de imágenes de productos (del 1 al 15)
+const imageModules = import.meta.glob('../assets/*.{jpeg,jpg,png}', { eager: true });
+
 const allImages = Object.keys(imageModules)
   .filter((path) => {
     const fileName = path.split('/').pop();
-    const match = fileName.match(/^(\d+)\.jpeg$/i);
+    const match = fileName.match(/^(\d+)\.(jpeg|jpg|png)$/i);
     if (!match) return false;
     const num = parseInt(match[1], 10);
-    return num >= 1 && num <= 15; // Exactamente 15 fotos
+    return num >= 1 && num <= 15; // 15 fotos de productos
   })
   .sort((a, b) => {
     const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
@@ -29,7 +31,7 @@ const allImages = Object.keys(imageModules)
   })
   .map((path) => imageModules[path].default);
 
-// Agrupamos en 5 tríos exactos (15 fotos)
+// Agrupamos en 5 tríos exactos
 const chunkArray = (array, chunkSize) => {
   const results = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -58,11 +60,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
           
           <div className="flex items-center gap-4">
-            <img 
-              src={logoImg} 
-              alt="Logo Ámbar" 
-              className="h-14 md:h-16 w-auto object-contain mix-blend-multiply" 
-            />
+            {logoImg && (
+              <img 
+                src={logoImg} 
+                alt="Logo Ámbar" 
+                className="h-14 md:h-16 w-auto object-contain mix-blend-multiply" 
+              />
+            )}
             <div className="text-2xl md:text-3xl font-light tracking-[0.3em] text-stone-900">
               ÁMBAR
             </div>
@@ -97,7 +101,7 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. HERO BANNER - NUDE & WARM AMBIENTE */}
+      {/* 2. HERO BANNER - ESTÉTICA NUDE Y CÁLIDA */}
       <section className="w-full bg-[#ebe2db] pt-5 pb-7 border-b border-rose-200/40 shadow-inner">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-6">
           
@@ -115,7 +119,6 @@ export default function Home() {
           >
             {photoGroups.map((group, groupIndex) => (
               <SwiperSlide key={groupIndex} className="pb-8">
-                {/* 3 Fotos enmarcadas armoniosamente sin fondo oscuro */}
                 <div className="grid grid-cols-3 gap-0 h-44 sm:h-52 md:h-60 overflow-hidden shadow-sm rounded-xs border border-stone-300/40">
                   {group.map((imgSrc, imgIndex) => (
                     <div 
@@ -135,7 +138,7 @@ export default function Home() {
             ))}
           </Swiper>
 
-          {/* TEXTO Y BOTÓN FIJOS CON TONOS CÁLIDOS DE ÁMBAR */}
+          {/* TEXTO Y BOTÓN FIJOS */}
           <div className="text-center space-y-2.5 pt-2">
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-500 block">
               Estética & Bienestar
