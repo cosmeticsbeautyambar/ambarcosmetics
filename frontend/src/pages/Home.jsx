@@ -1,29 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import logoImg from '../assets/logo.jpeg';
+import logoImg from '../assets/logo.png';
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, EffectFade, Pagination, Navigation } from 'swiper/modules';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 
 // Estilos de Swiper
 import 'swiper/css';
-import 'swiper/css/effect-fade';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-// Carga automática de todas las imágenes .jpeg de la carpeta assets
+// Carga automática de todas las imágenes .jpeg de assets
 const imageModules = import.meta.glob('../assets/*.jpeg', { eager: true });
 
 // Convertimos los módulos en un array ordenado de rutas de imágenes
 const allImages = Object.keys(imageModules)
   .sort((a, b) => {
-    // Orden numérico inteligente (1, 2, ..., 18)
     const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
     const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
     return numA - numB;
   })
   .map((path) => imageModules[path].default)
   .filter((img) => !img.includes('logo')); // Excluimos la imagen del logo
+
+// Agrupamos las 18 fotos en grupos de 3 para cada Slide (6 diapositivas en total)
+const chunkArray = (array, chunkSize) => {
+  const results = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    results.push(array.slice(i, i + chunkSize));
+  }
+  return results;
+};
+
+const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
@@ -35,13 +44,13 @@ export default function Home() {
       .catch((err) => console.error("Error al cargar destacados:", err));
   }, []);
 
-  // Textos rotativos para dar variedad según la diapositiva
   const slideTexts = [
-    { title: 'Cosmética Consciente & Natural', subtitle: 'Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.' },
-    { title: 'Nueva Colección Skin Care', subtitle: 'Nutrición profunda con ingredientes orgánicos seleccionados.' },
-    { title: 'Edición Limitada Labiales', subtitle: 'Tonos atemporales e hidratación duradera para cada momento.' },
+    { title: 'Cosmética Consciente & Natural', subtitle: 'Fórmulas delicadas para resaltar la pureza de tu piel.' },
+    { title: 'Nueva Colección Skin Care', subtitle: 'Nutrición profunda con ingredientes orgánicos.' },
+    { title: 'Edición Limitada Labiales', subtitle: 'Tonos atemporales e hidratación duradera.' },
     { title: 'Ritual de Belleza Diario', subtitle: 'Siente la frescura y la suavidad que tu rostro merece.' },
-    { title: 'Esencia & Pureza', subtitle: 'Cuidado integral formulado para potenciar tu brillo natural.' },
+    { title: 'Esencia & Pureza', subtitle: 'Cuidado integral para potenciar tu brillo natural.' },
+    { title: 'Línea Exclusiva Ámbar', subtitle: 'Texturas ligeras que transforman tu rutina.' },
   ];
 
   return (
@@ -91,55 +100,60 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* 2. HERO BANNER VIVO CON LAS 18 FOTOS EN INTERVALOS */}
-      <section className="w-full relative overflow-hidden bg-stone-900">
-        <Swiper
-          modules={[Autoplay, EffectFade, Pagination, Navigation]}
-          effect="fade"
-          fadeEffect={{ crossFade: true }}
-          speed={1200}
-          autoplay={{
-            delay: 4000, // Cambia automáticamente cada 4 segundos
-            disableOnInteraction: false,
-          }}
-          loop={true}
-          pagination={{ clickable: true }}
-          navigation={true}
-          className="h-[380px] md:h-[520px] w-full"
-        >
-          {allImages.map((imgSrc, index) => {
-            const textInfo = slideTexts[index % slideTexts.length];
-            return (
-              <SwiperSlide key={index} className="relative w-full h-full">
-                <img 
-                  src={imgSrc} 
-                  alt={`Ámbar Cosmetics Slide ${index + 1}`} 
-                  className="w-full h-full object-cover object-center opacity-85"
-                />
-                
-                {/* Overlay sutil para legibilidad de texto */}
-                <div className="absolute inset-0 bg-stone-950/30 backdrop-brightness-95 flex items-center justify-center">
-                  <div className="max-w-xl mx-auto px-6 text-center space-y-4 text-white">
-                    <span className="text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase opacity-90 block drop-shadow-sm">
-                      Estética & Bienestar
-                    </span>
-                    <h1 className="text-3xl md:text-5xl font-light tracking-wide text-white drop-shadow-md">
-                      {textInfo.title}
-                    </h1>
-                    <p className="text-xs md:text-sm text-stone-200 max-w-md mx-auto leading-relaxed font-light drop-shadow-xs">
-                      {textInfo.subtitle}
-                    </p>
-                    <div className="pt-2">
-                      <button className="bg-white text-stone-900 text-[10px] md:text-xs font-medium tracking-[0.2em] uppercase px-8 py-3.5 hover:bg-stone-200 transition shadow-lg">
-                        Ver Catálogo
-                      </button>
+      {/* 2. BANNER VIVO EN Mosaico (3 FOTOS APILADAS EN PARALELO) */}
+      <section className="w-full bg-stone-900 py-6 md:py-8 border-b border-stone-200 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4">
+          <Swiper
+            modules={[Autoplay, Pagination, Navigation]}
+            speed={1000}
+            autoplay={{
+              delay: 4500,
+              disableOnInteraction: false,
+            }}
+            loop={true}
+            pagination={{ clickable: true }}
+            navigation={true}
+            className="w-full"
+          >
+            {photoGroups.map((group, groupIndex) => {
+              const textInfo = slideTexts[groupIndex % slideTexts.length];
+              return (
+                <SwiperSlide key={groupIndex} className="pb-10">
+                  <div className="flex flex-col gap-6">
+                    
+                    {/* Grilla de 3 imágenes alineadas */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 h-[350px] md:h-[420px]">
+                      {group.map((imgSrc, imgIndex) => (
+                        <div key={imgIndex} className="relative w-full h-full rounded-xs overflow-hidden bg-stone-800 group shadow-md">
+                          <img 
+                            src={imgSrc} 
+                            alt={`Ámbar foto ${groupIndex * 3 + imgIndex + 1}`} 
+                            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-700 ease-out"
+                          />
+                          <div className="absolute inset-0 bg-stone-900/10 group-hover:bg-transparent transition duration-300" />
+                        </div>
+                      ))}
                     </div>
+
+                    {/* Texto informativo de la colección centralizado bajo las 3 imágenes */}
+                    <div className="text-center space-y-2 py-2">
+                      <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-stone-400 block">
+                        Estética & Bienestar
+                      </span>
+                      <h2 className="text-xl md:text-2xl font-light tracking-wide text-white">
+                        {textInfo.title}
+                      </h2>
+                      <p className="text-xs text-stone-300 max-w-md mx-auto font-light">
+                        {textInfo.subtitle}
+                      </p>
+                    </div>
+
                   </div>
-                </div>
-              </SwiperSlide>
-            );
-          })}
-        </Swiper>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
+        </div>
       </section>
 
       {/* 3. COMPRA POR CATEGORÍA */}
