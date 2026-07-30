@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // O la librería de ruteo que utilices
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -19,16 +20,13 @@ import imgCapilar from '../assets/capilar.png';
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
 
-  // Si por error la URL viene duplicada (ej: dom.com/apihttps://dom.com/api)
   if ((url.match(/https?:\/\//g) || []).length > 1) {
     const parts = url.split(/(?=https?:\/\/)/);
-    url = parts[parts.length - 1]; // Toma la última URL válida
+    url = parts[parts.length - 1];
   }
 
-  // Sanitizado básico de corchetes, comillas y barras al final
   url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
 
-  // Asegura el /api al final sin duplicar
   if (!url.endsWith('/api')) {
     url += '/api';
   }
@@ -73,6 +71,7 @@ const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
+  const navigate = useNavigate(); // Hook para navegación
 
   useEffect(() => {
     fetch(`${API_URL}/products/destacados`)
@@ -83,6 +82,11 @@ export default function Home() {
       .then((data) => setDestacados(data))
       .catch((err) => console.warn("Aviso:", err.message));
   }, []);
+
+  // Función sutil para acceder al Panel Logístico / Login
+  const handleAdminAccess = () => {
+    navigate('/login'); // Cambiá '/login' por la ruta de tu panel logístico si difiere
+  };
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
@@ -371,7 +375,16 @@ export default function Home() {
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
           </div>
           <div className="text-[10px] font-medium text-stone-500">
-            Desarrollado con 🤍 por{' '}
+            Desarrollado con{' '}
+            {/* 🔒 ACCESO DISCRETO AL PANEL ADMIN (Hacer clic en el corazón) */}
+            <span 
+              onClick={handleAdminAccess}
+              className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none"
+              title="Ámbar System"
+            >
+              🤍
+            </span>{' '}
+            por{' '}
             <span className="text-stone-800 font-bold tracking-widest hover:text-rose-500 transition cursor-pointer">
               GalmaTech
             </span>
