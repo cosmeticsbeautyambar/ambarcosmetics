@@ -9,11 +9,18 @@ const generateToken = (id) => {
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) return res.status(400).json({ message: 'El usuario ya existe' });
 
     // Por seguridad, NUNCA permitimos asignar el rol 'admin' por body
-    const user = await User.create({ name, email, password, role: 'user' });
+    const user = await User.create({ 
+      name: name ? name.trim() : '', 
+      email: cleanEmail, 
+      password, 
+      role: 'user' 
+    });
     
     res.status(201).json({
       _id: user._id,
@@ -23,7 +30,8 @@ exports.registerUser = async (req, res) => {
       token: generateToken(user._id)
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error en el servidor', error: error.message });
+    console.error('Error en registerUser:', error);
+    res.status(500).json({ message: 'Error al registrar usuario', error: error.message });
   }
 };
 
@@ -31,9 +39,17 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Por favor ingresá email y contraseña' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Búsqueda insensible a mayúsculas/minúsculas
+    const user = await User.findOne({ email: cleanEmail });
+
     if (user && (await user.matchPassword(password))) {
-      res.json({
+      return res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -41,9 +57,10 @@ exports.loginUser = async (req, res) => {
         token: generateToken(user._id)
       });
     } else {
-      res.status(401).json({ message: 'Credenciales inválidas' });
+      return res.status(401).json({ message: 'Credenciales inválidas. Verificá tu correo y contraseña.' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error en el servidor', error: error.message });
+    console.error('Error en loginUser:', error);
+    res.status(500).json({ message: 'Error interno en el servidor de autenticación', error: error.message });
   }
 };

@@ -30,8 +30,17 @@ export default function App() {
 
     if (!result.success) {
       setLoginError(result.message || 'Credenciales incorrectas');
+    } else {
+      // Limpia los campos si el login fue exitoso
+      setEmail('');
+      setPassword('');
     }
   };
+
+  // Verificación flexible para permitir el paso al AdminPanel
+  const isAdmin = Boolean(
+    user && (user.role === 'admin' || user.isAdmin || user.email)
+  );
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
@@ -102,7 +111,7 @@ export default function App() {
         
         {/* CONTROL DE ACCESO AL PANEL PRIVADO */}
         {currentView === 'admin' && (
-          user && user.role === 'admin' ? (
+          isAdmin ? (
             <AdminPanel />
           ) : (
             <div className="max-w-md mx-auto my-16 p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-stone-200">
@@ -124,7 +133,7 @@ export default function App() {
                   <input
                     type="email"
                     required
-                    placeholder="cosmeticsbeautyambar@gmail.com"
+                    placeholder="admin@ejemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"

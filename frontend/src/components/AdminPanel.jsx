@@ -1,12 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { ProductContext } from './ProductContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function AdminPanel() {
   const { products, addProduct, updateStock, updatePrices, deleteProduct } = useContext(ProductContext);
+  const { user, logout } = useContext(AuthContext);
 
-  // Seguridad por clave simple
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pin, setPin] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Formulario de Alta
   const [formData, setFormData] = useState({
@@ -21,15 +23,6 @@ export default function AdminPanel() {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
-
-  const handlePinSubmit = (e) => {
-    e.preventDefault();
-    if (pin === '1234') { // Cambiar por la clave preferida
-      setIsAuthenticated(true);
-    } else {
-      alert('🔒 Clave incorrecta');
-    }
-  };
 
   // Procesador de imagen con autocrop/fit
   const handleImageUpload = (e) => {
@@ -48,65 +41,46 @@ export default function AdminPanel() {
     }
   };
 
-  const handleSubmitProduct = (e) => {
+  const handleSubmitProduct = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
     if (!formData.name || !formData.priceRetail || !formData.priceWholesale || !formData.stock) {
-      alert('Por favor completá los campos obligatorios.');
+      setErrorMessage('Por favor completá los campos obligatorios (*).');
       return;
     }
 
+    setLoading(true);
+
     const defaultImg = 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600';
     
-    addProduct({
+    // Llamada asíncrona real al backend mediante el ProductContext
+    const response = await addProduct({
       ...formData,
       image: formData.image || defaultImg
     });
 
-    // Limpiar formulario
-    setFormData({
-      name: '',
-      category: 'Faciales',
-      description: '',
-      priceRetail: '',
-      priceWholesale: '',
-      minWholesaleQty: '6',
-      stock: '',
-      image: ''
-    });
-    setImagePreview(null);
-    alert('✨ ¡Producto publicado con éxito en el catálogo!');
-  };
+    setLoading(false);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-stone-50 px-4">
-        <div className="bg-white p-8 border border-stone-200 shadow-sm max-w-sm w-full text-center space-y-4">
-          <span className="text-3xl">🔐</span>
-          <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-800">
-            Panel Exclusivo de Administración
-          </h2>
-          <p className="text-xs text-stone-500 font-light">
-            Ingresá el PIN de acceso para gestionar productos y stock.
-          </p>
-          <form onSubmit={handlePinSubmit} className="space-y-3 pt-2">
-            <input
-              type="password"
-              placeholder="PIN de acceso (Ej: 1234)"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              className="w-full text-center px-4 py-2 border border-stone-300 text-sm focus:outline-none focus:border-stone-800"
-            />
-            <button
-              type="submit"
-              className="w-full bg-stone-900 text-white py-2 text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-stone-800 transition"
-            >
-              Ingresar al Panel
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+    if (response && response.success) {
+      setSuccessMessage('✨ ¡Producto publicado con éxito en MongoDB Atlas!');
+      // Limpiar formulario solo si la publicación en BD fue exitosa
+      setFormData({
+        name: '',
+        category: 'Faciales',
+        description: '',
+        priceRetail: '',
+        priceWholesale: '',
+        minWholesaleQty: '6',
+        stock: '',
+        image: ''
+      });
+      setImagePreview(null);
+    } else {
+      setErrorMessage(response?.message || 'Error al conectar o guardar el producto en el servidor.');
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-10 text-stone-800 font-sans">
@@ -116,14 +90,29 @@ export default function AdminPanel() {
         <div>
           <span className="text-[10px] font-bold tracking-[0.25em] text-rose-400 uppercase">Ámbar Cosmetics</span>
           <h1 className="text-xl font-light tracking-wide uppercase text-stone-900">Panel de Control de Stock & Precios</h1>
+          {user?.email && (
+            <p className="text-[11px] text-stone-500 mt-0.5">Sesión activa: <span className="font-semibold text-stone-700">{user.email}</span></p>
+          )}
         </div>
         <button 
-          onClick={() => setIsAuthenticated(false)} 
+          onClick={logout} 
           className="text-xs font-medium text-stone-500 hover:text-stone-900 underline uppercase tracking-wider"
         >
           Cerrar Sesión
         </button>
       </div>
+
+      {/* ALERTAS DE ESTADO */}
+      {errorMessage && (
+        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-md text-center font-medium">
+          {errorMessage}
+        </div>
+      )}
+      {successMessage && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-md text-center font-medium">
+          {successMessage}
+        </div>
+      )}
 
       {/* FORMULARIO DE ALTA DE PRODUCTO */}
       <div className="bg-white border border-stone-200 p-6 shadow-xs">
@@ -133,13 +122,12 @@ export default function AdminPanel() {
 
         <form onSubmit={handleSubmitProduct} className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* COLUMNA 1: FOTO & PREVIEW RECORTE AUTOMÁTICO */}
+          {/* COLUMNA 1: FOTO & PREVIEW */}
           <div className="space-y-3">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-stone-600">
               Foto del Producto
             </label>
             
-            {/* Contenedor con aspect-square (1:1) para ajuste automático */}
             <div className="w-full aspect-square bg-stone-100 border-2 border-dashed border-stone-300 flex flex-col items-center justify-center relative overflow-hidden group">
               {imagePreview ? (
                 <>
@@ -156,7 +144,7 @@ export default function AdminPanel() {
                 <div className="text-center p-4">
                   <span className="text-2xl block mb-1">📸</span>
                   <span className="text-[10px] text-stone-500 font-light block">
-                    Formatos JPG, PNG (Se ajusta automáticamente a 1:1)
+                    Formatos JPG, PNG (Ajuste a 1:1)
                   </span>
                 </div>
               )}
@@ -281,9 +269,10 @@ export default function AdminPanel() {
 
             <button 
               type="submit" 
-              className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-stone-800 transition shadow-xs mt-2"
+              disabled={loading}
+              className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-stone-800 transition shadow-xs mt-2 disabled:opacity-50"
             >
-              Publicar Producto
+              {loading ? 'Guardando en Servidor...' : 'Publicar Producto'}
             </button>
           </div>
 
