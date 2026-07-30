@@ -1,15 +1,22 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // Requerido para encriptar la contraseña
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const User = require('./models/User');
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// 1. Configuración de CORS completa (Permite DELETE y el Header Authorization)
+app.use(cors({
+  origin: '*', // O la URL de tu frontend en Render
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Middlewares para JSON e imágenes
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -19,14 +26,13 @@ const initAdmin = async () => {
     const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
     const adminPassword = 'ambar123456';
 
-    // Buscamos si ya existe
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (!existingAdmin) {
       await User.create({
         name: 'Dueña Ámbar Cosmetics',
         email: adminEmail,
-        password: adminPassword, // Pasa directa por si el schema tiene .pre('save')
+        password: adminPassword,
         role: 'admin',
         isAdmin: true
       });
@@ -35,7 +41,7 @@ const initAdmin = async () => {
       existingAdmin.password = adminPassword;
       existingAdmin.role = 'admin';
       existingAdmin.isAdmin = true;
-      await existingAdmin.save(); // Dispara los middlewares del esquema
+      await existingAdmin.save();
       console.log('🔄 ¡Cuenta de Admin re-sincronizada con éxito!');
     }
   } catch (error) {
@@ -47,17 +53,15 @@ const initAdmin = async () => {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Conexión exitosa a MongoDB Atlas 🍃');
-    initAdmin(); // Ejecutamos la inicialización del Admin
+    initAdmin();
   })
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// Rutas
+// 2. Rutas principales
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 
-// ALIAS para evitar 404 si el frontend llama a /api/login directamente
-app.use('/api', require('./routes/authRoutes'));
-
+// Ruta raíz de prueba
 app.get('/', (req, res) => {
     res.send('El servidor de Ámbar Cosmetics está funcionando correctamente 🚀');
 });

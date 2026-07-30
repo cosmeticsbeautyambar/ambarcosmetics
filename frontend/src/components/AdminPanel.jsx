@@ -158,9 +158,11 @@ export default function AdminPanel() {
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
+      const activeToken = token || localStorage.getItem('token');
       const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+
+      if (activeToken) {
+        headers['Authorization'] = `Bearer ${activeToken}`;
       }
 
       const response = await fetch(url, {
@@ -183,28 +185,37 @@ export default function AdminPanel() {
     }
   };
 
-  // Eliminar Producto (Solución al error 401)
+  // Eliminar Producto (Verificación estricta de Token)
   const handleDelete = async (id) => {
     if (!window.confirm('¿Seguro que querés eliminar este producto?')) return;
 
-    try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+    // Obtener token fresco del contexto o localStorage
+    const activeToken = token || localStorage.getItem('token');
 
+    if (!activeToken) {
+      alert("⚠️ No estás logueado o tu sesión expiró. Volvé a iniciar sesión.");
+      return;
+    }
+
+    try {
       const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
-        headers
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeToken}`
+        }
       });
 
       if (res.ok) {
         loadProducts();
+      } else if (res.status === 401) {
+        alert('❌ No tenés autorización para eliminar. Tu sesión expiró o es inválida, volvé a iniciar sesión.');
       } else {
-        alert('No tenés autorización para eliminar. Iniciá sesión nuevamente.');
+        alert('No se pudo eliminar el producto. Intentalo de nuevo.');
       }
     } catch (err) {
       console.error("Error al eliminar:", err);
+      alert('Error de conexión al intentar eliminar.');
     }
   };
 
