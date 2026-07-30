@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 
-// Páginas y Componentes según la estructura del proyecto
+// Páginas y Componentes
 import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
 import AdminPanel from './components/AdminPanel';
@@ -12,7 +12,6 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Estados para el formulario de Login de la Dueña
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -29,14 +28,12 @@ export default function App() {
     if (!result.success) {
       setLoginError(result.message || 'Credenciales incorrectas');
     } else {
-      // Limpia los campos si el login fue exitoso
       setEmail('');
       setPassword('');
-      navigate('/admin'); // Redirige directamente al panel tras un login exitoso
+      navigate('/admin');
     }
   };
 
-  // Verificación flexible para permitir el paso al AdminPanel
   const isAdmin = Boolean(
     user && (user.role === 'admin' || user.isAdmin || user.email)
   );
@@ -44,19 +41,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col font-sans">
       {/* NAVBAR DE NAVEGACIÓN */}
-      <nav className="bg-stone-900 text-stone-300 py-3 px-4 sm:px-8 text-xs font-semibold uppercase tracking-[0.15em] border-b border-stone-800 sticky top-0 z-[100] flex justify-between items-center shadow-md">
+      <nav className="bg-stone-900 text-stone-300 py-2.5 px-4 sm:px-8 text-xs font-semibold uppercase tracking-[0.15em] border-b border-stone-800 sticky top-0 z-[100] flex justify-between items-center shadow-md">
         
         {/* LOGO */}
         <div 
           onClick={() => navigate('/')} 
-          className="cursor-pointer text-white hover:text-rose-200 transition flex items-center gap-2 text-sm font-bold"
+          className="cursor-pointer text-white hover:text-rose-200 transition flex items-center gap-2 text-xs sm:text-sm font-bold"
         >
           <span>✨</span>
           <span>Ámbar Cosmetics</span>
         </div>
 
         {/* NAVEGACIÓN */}
-        <div className="flex items-center space-x-3 sm:space-x-6 text-[11px] sm:text-xs">
+        <div className="flex items-center space-x-3 sm:space-x-5 text-[11px]">
           <button
             onClick={() => navigate('/')}
             className={`transition pb-0.5 ${
@@ -79,16 +76,17 @@ export default function App() {
             Catálogo
           </button>
 
-          {/* BOTÓN PANEL DE LOGÍSTICA / DUEÑA */}
+          {/* 🔒 BOTÓN PANEL LOGÍSTICA (MÁS CHIQUITO Y DISCRETO) */}
           <button
             onClick={() => navigate(isAdmin ? '/admin' : '/login')}
-            className={`transition pb-0.5 px-3 py-1 rounded-sm border ${
+            className={`transition px-2 py-0.5 rounded text-[9px] font-medium tracking-normal border ${
               location.pathname === '/admin' || location.pathname === '/login'
-                ? 'bg-rose-200 text-stone-900 border-rose-200 font-bold'
-                : 'border-stone-700 text-stone-300 hover:border-stone-500 hover:text-white'
+                ? 'bg-stone-800 text-rose-200 border-rose-200/50'
+                : 'border-stone-800 text-stone-500 hover:text-stone-300 hover:border-stone-700'
             }`}
+            title="Acceso Gestión"
           >
-            🔐 Panel Logística
+            🔐 Panel
           </button>
 
           {user && (
@@ -97,8 +95,8 @@ export default function App() {
                 logout();
                 navigate('/');
               }}
-              className="text-stone-400 hover:text-rose-400 transition ml-2 text-[10px]"
-              title="Cerrar Sesión de Dueña"
+              className="text-stone-500 hover:text-rose-400 transition text-[9px]"
+              title="Cerrar Sesión"
             >
               (Salir)
             </button>
@@ -106,13 +104,12 @@ export default function App() {
         </div>
       </nav>
 
-      {/* RENDERIZADO CON RUTAS */}
+      {/* RENDERIZADO DE VISTAS */}
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
           
-          {/* RUTA DE LOGIN */}
           <Route 
             path="/login" 
             element={
@@ -170,13 +167,11 @@ export default function App() {
             } 
           />
 
-          {/* RUTA PROTEGIDA DE ADMIN */}
           <Route 
             path="/admin" 
             element={isAdmin ? <AdminPanel /> : <Navigate to="/login" replace />} 
           />
 
-          {/* REDIRECCIÓN DEFAULT POR SI INGRESAN UNA RUTA INEXISTENTE */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

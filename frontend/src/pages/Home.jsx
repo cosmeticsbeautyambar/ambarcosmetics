@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // O la librería de ruteo que utilices
+import { useNavigate } from 'react-router-dom';
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -16,7 +16,6 @@ import imgFacial from '../assets/facial.png';
 import imgCorporal from '../assets/corporal.png';
 import imgCapilar from '../assets/capilar.png';
 
-// Obtenemos la URL de la API sanitizada y anti-duplicados
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
 
@@ -36,11 +35,9 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Carga dinámica del logo
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
 
-// Carga de imágenes de productos (del 1 al 12)
 const imageModules = import.meta.glob('../assets/*.{jpeg,jpg,png}', { eager: true });
 
 const allImages = Object.keys(imageModules)
@@ -58,7 +55,6 @@ const allImages = Object.keys(imageModules)
   })
   .map((path) => imageModules[path].default);
 
-// Agrupamos en tríos
 const chunkArray = (array, chunkSize) => {
   const results = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -71,7 +67,7 @@ const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
-  const navigate = useNavigate(); // Hook para navegación
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`${API_URL}/products/destacados`)
@@ -83,9 +79,17 @@ export default function Home() {
       .catch((err) => console.warn("Aviso:", err.message));
   }, []);
 
-  // Función sutil para acceder al Panel Logístico / Login
   const handleAdminAccess = () => {
-    navigate('/login'); // Cambiá '/login' por la ruta de tu panel logístico si difiere
+    navigate('/login');
+  };
+
+  // Función para ir al catálogo con filtro de categoría opcional
+  const goToCatalogo = (category = '') => {
+    if (category) {
+      navigate(`/catalogo?categoria=${encodeURIComponent(category)}`);
+    } else {
+      navigate('/catalogo');
+    }
   };
 
   return (
@@ -137,17 +141,17 @@ export default function Home() {
           </div>
         </div>
 
-        {/* MENÚ DE NAVEGACIÓN */}
+        {/* MENÚ DE CATEGORÍAS HEADER */}
         <nav className="border-t border-rose-200/40 max-w-6xl mx-auto px-6 py-2 flex justify-center space-x-8 md:space-x-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-700">
-          <a href="#faciales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+          <button onClick={() => goToCatalogo('Facial')} className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
             Cosméticos Faciales
-          </a>
-          <a href="#corporales" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+          </button>
+          <button onClick={() => goToCatalogo('Corporal')} className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
             Cosméticos Corporales
-          </a>
-          <a href="#capilares" className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
+          </button>
+          <button onClick={() => goToCatalogo('Capilar')} className="hover:text-stone-900 transition pb-0.5 border-b-2 border-transparent hover:border-stone-800">
             Cosméticos Capilares
-          </a>
+          </button>
         </nav>
       </header>
 
@@ -199,12 +203,13 @@ export default function Home() {
               Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
             </p>
             <div className="pt-1">
-              <a 
-                href="#destacados" 
+              {/* Redirige a la página /catalogo */}
+              <button 
+                onClick={() => goToCatalogo()}
                 className="inline-block bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-7 py-2.5 hover:bg-stone-800 transition shadow-xs cursor-pointer"
               >
                 Ver Catálogo
-              </a>
+              </button>
             </div>
           </div>
 
@@ -218,7 +223,7 @@ export default function Home() {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="#faciales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <div onClick={() => goToCatalogo('Facial')} className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgFacial} 
               alt="Cosméticos Faciales" 
@@ -229,9 +234,9 @@ export default function Home() {
                 Cosméticos Faciales
               </span>
             </div>
-          </a>
+          </div>
 
-          <a href="#corporales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <div onClick={() => goToCatalogo('Corporal')} className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCorporal} 
               alt="Cosméticos Corporales" 
@@ -242,9 +247,9 @@ export default function Home() {
                 Cosméticos Corporales
               </span>
             </div>
-          </a>
+          </div>
 
-          <a href="#capilares" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
+          <div onClick={() => goToCatalogo('Capilar')} className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCapilar} 
               alt="Cosméticos Capilares" 
@@ -255,7 +260,7 @@ export default function Home() {
                 Cosméticos Capilares
               </span>
             </div>
-          </a>
+          </div>
         </div>
       </section>
 
@@ -303,12 +308,12 @@ export default function Home() {
               Aporta un brillo sutil deslumbrante y una fragancia envolvente que te acompaña durante todo el día.
             </p>
             <div className="pt-1 w-full md:w-auto">
-              <a 
-                href="#destacados" 
+              <button 
+                onClick={() => goToCatalogo()} 
                 className="inline-block w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-6 text-[10px] font-bold uppercase tracking-[0.2em] text-center"
               >
                 Ver Producto
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -329,12 +334,12 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <a 
-              href="#destacados" 
+            <button 
+              onClick={() => goToCatalogo()} 
               className="bg-white text-stone-900 px-6 py-2 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-stone-200 transition shrink-0"
             >
               Aprovechar Descuento
-            </a>
+            </button>
           </div>
         </div>
 
@@ -376,7 +381,6 @@ export default function Home() {
           </div>
           <div className="text-[10px] font-medium text-stone-500">
             Desarrollado con{' '}
-            {/* 🔒 ACCESO DISCRETO AL PANEL ADMIN (Hacer clic en el corazón) */}
             <span 
               onClick={handleAdminAccess}
               className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none"
