@@ -83,7 +83,6 @@ export default function Home() {
     navigate('/login');
   };
 
-  // Función para ir al catálogo con filtro de categoría opcional
   const goToCatalogo = (category = '') => {
     if (category) {
       navigate(`/catalogo?categoria=${encodeURIComponent(category)}`);
@@ -108,7 +107,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between items-center">
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
             {logoImg && (
               <img 
                 src={logoImg} 
@@ -131,12 +130,16 @@ export default function Home() {
           </div>
 
           <div className="flex items-center space-x-6 text-stone-700">
-            <button className="hover:text-stone-900 transition text-sm flex items-center gap-1.5">
-              👤 <span className="hidden sm:inline text-[11px] font-medium tracking-wider">Cuenta</span>
-            </button>
-            <button className="hover:text-stone-900 transition relative text-sm">
-              🛍️
-              <span className="absolute -top-1.5 -right-1.5 bg-stone-900 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">0</span>
+            {/* BOTÓN CARRITO */}
+            <button 
+              onClick={() => navigate('/carrito')}
+              className="hover:text-stone-900 transition relative text-base flex items-center gap-1 font-semibold text-xs"
+              title="Ver Carrito"
+            >
+              🛍️ <span className="hidden sm:inline">Carrito</span>
+              <span className="bg-stone-900 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                2
+              </span>
             </button>
           </div>
         </div>
@@ -203,7 +206,6 @@ export default function Home() {
               Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
             </p>
             <div className="pt-1">
-              {/* Redirige a la página /catalogo */}
               <button 
                 onClick={() => goToCatalogo()}
                 className="inline-block bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-7 py-2.5 hover:bg-stone-800 transition shadow-xs cursor-pointer"
@@ -278,7 +280,10 @@ export default function Home() {
               <div className="space-y-1.5">
                 <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
                 <p className="text-xs font-semibold text-stone-900 pb-1">${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}</p>
-                <button className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none">
+                <button 
+                  onClick={() => navigate('/carrito')}
+                  className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none cursor-pointer"
+                >
                   Agregar al carrito
                 </button>
               </div>

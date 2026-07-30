@@ -1,14 +1,17 @@
 import React, { useState, useContext } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
+import { CartContext } from './context/CartContext';
 
 // Páginas y Componentes
 import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
+import Carrito from './pages/Carrito';
 import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const { user, login, logout } = useContext(AuthContext);
+  const { totalCount } = useContext(CartContext); // <-- Badge de items
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -76,7 +79,24 @@ export default function App() {
             Catálogo
           </button>
 
-          {/* 🔒 BOTÓN PANEL LOGÍSTICA (MÁS CHIQUITO Y DISCRETO) */}
+          {/* BOTÓN CARRITO CON CONTADOR FLOTANTE */}
+          <button
+            onClick={() => navigate('/carrito')}
+            className={`transition pb-0.5 flex items-center gap-1.5 relative ${
+              location.pathname === '/carrito'
+                ? 'text-white border-b-2 border-white font-bold'
+                : 'hover:text-white'
+            }`}
+          >
+            <span>🛒 Carrito</span>
+            {totalCount > 0 && (
+              <span className="bg-rose-500 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full min-w-[16px] text-center leading-tight shadow-xs">
+                {totalCount}
+              </span>
+            )}
+          </button>
+
+          {/* 🔒 BOTÓN PANEL LOGÍSTICA */}
           <button
             onClick={() => navigate(isAdmin ? '/admin' : '/login')}
             className={`transition px-2 py-0.5 rounded text-[9px] font-medium tracking-normal border ${
@@ -109,6 +129,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/carrito" element={<Carrito />} />
           
           <Route 
             path="/login" 
