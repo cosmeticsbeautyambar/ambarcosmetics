@@ -184,10 +184,14 @@ export default function Home() {
             <p className="text-xs text-stone-600 max-w-md mx-auto font-light">
               Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
             </p>
+            {/* BOTÓN CENTRAL CONECTADO AL CATÁLOGO */}
             <div className="pt-1">
-              <button className="bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-7 py-2 hover:bg-stone-800 transition shadow-xs">
+              <a 
+                href="#destacados" 
+                className="inline-block bg-stone-900 text-white text-[10px] font-medium tracking-[0.2em] uppercase px-7 py-2.5 hover:bg-stone-800 transition shadow-xs cursor-pointer"
+              >
                 Ver Catálogo
-              </button>
+              </a>
             </div>
           </div>
 
@@ -248,7 +252,7 @@ export default function Home() {
       </section>
 
       {/* 4. PRODUCTOS DESTACADOS DINÁMICOS */}
-      <section className="max-w-5xl mx-auto px-6 py-6">
+      <section id="destacados" className="max-w-5xl mx-auto px-6 py-6 scroll-mt-24">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-5">
           Productos Destacados
         </h2>
@@ -300,9 +304,12 @@ export default function Home() {
               Aporta un brillo sutil deslumbrante y una fragancia envolvente que te acompaña durante todo el día.
             </p>
             <div className="pt-1 w-full md:w-auto">
-              <button className="w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-6 text-[10px] font-bold uppercase tracking-[0.2em]">
+              <a 
+                href="#destacados" 
+                className="inline-block w-full md:w-auto bg-white text-stone-900 hover:bg-stone-200 transition py-2.5 px-6 text-[10px] font-bold uppercase tracking-[0.2em] text-center"
+              >
                 Ver Producto
-              </button>
+              </a>
             </div>
           </div>
 
@@ -327,7 +334,7 @@ export default function Home() {
               </div>
             </div>
             <a 
-              href="#catalogo" 
+              href="#destacados" 
               className="bg-white text-stone-900 px-6 py-2 text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-stone-200 transition shrink-0"
             >
               Aprovechar Descuento
