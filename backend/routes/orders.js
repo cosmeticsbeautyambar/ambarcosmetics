@@ -3,7 +3,7 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 
-// 1. POST /api/orders -> Crea la orden en la BD (NO descuenta stock aún)
+// 1. POST /api/orders -> Crea la orden en la BD
 router.post('/', async (req, res) => {
   try {
     const { customer, items, total, subtotal, discount } = req.body;
@@ -46,8 +46,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 3. PATCH /api/orders/:id/status -> Cambia el estado y descuenta stock al despachar
-router.patch('/:id/status', async (req, res) => {
+// 3. PATCH /api/orders/:id -> Soporta peticiones a /:id Y a /:id/status para cambiar estado
+const handleStatusUpdate = async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findById(req.params.id);
@@ -56,12 +56,15 @@ router.patch('/:id/status', async (req, res) => {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
 
-    // 🚀 SOLO resta el stock si pasa a "despachado" y NO se descontó anteriormente
+    // 🚀 Resta el stock si pasa a "despachado" y NO se descontó anteriormente
     if (status === 'despachado' && !order.stockDeducted) {
       for (const item of order.items) {
-        await Product.findByIdAndUpdate(item._id, {
-          $inc: { stock: -item.qty }
-        });
+        const productId = item.product || item._id;
+        if (productId) {
+          await Product.findByIdAndUpdate(productId, {
+            $inc: { stock: -item.qty }
+          });
+        }
       }
       order.stockDeducted = true;
     }
@@ -77,6 +80,26 @@ router.patch('/:id/status', async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar el estado de la orden:', error);
     return res.status(500).json({ error: 'Error al cambiar el estado del pedido' });
+  }
+};
+
+// Mapeamos ambas rutas para que funcione sí o sí
+router.patch('/:id', handleStatusUpdate);
+router.patch('/:id/status', handleStatusUpdate);
+
+// 4. DELETE /api/orders/:id -> Elimina una orden por completo
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    
+    if (!deletedOrder) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    return res.json({ message: 'Orden eliminada correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar la orden:', error);
+    return res.status(500).json({ error: 'Error interno al eliminar la orden' });
   }
 });
 
