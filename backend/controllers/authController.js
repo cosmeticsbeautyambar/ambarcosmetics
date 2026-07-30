@@ -45,8 +45,8 @@ exports.loginUser = async (req, res) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // Búsqueda insensible a mayúsculas/minúsculas
-    const user = await User.findOne({ email: cleanEmail });
+    // 💡 CAMBIO CLAVE: Agregamos .select('+password') para forzar a Mongoose a traer el hash
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
       return res.json({
