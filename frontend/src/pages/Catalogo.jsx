@@ -1,118 +1,236 @@
-import React, { useState, useContext } from 'react';
-import { ProductContext } from '../components/ProductContext';
-import ProductCard from '../components/ProductCard';
+import React, { useState, useEffect } from 'react';
+
+const getCleanApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
+  if ((url.match(/https?:\/\//g) || []).length > 1) {
+    const parts = url.split(/(?=https?:\/\/)/);
+    url = parts[parts.length - 1];
+  }
+  url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) url += '/api';
+  return url;
+};
+
+const API_URL = getCleanApiUrl();
+
+// Componente para renderizado de imagen HD y seguro
+const SafeImage = ({ src, alt, className = "" }) => {
+  const [error, setError] = useState(false);
+
+  if (error || !src) {
+    return (
+      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] select-none rounded border border-stone-200 ${className}`}>
+        <span>🖼️</span>
+        <span>Sin foto</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`overflow-hidden bg-stone-100 rounded border border-stone-200/80 flex items-center justify-center ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setError(true)}
+        className="w-full h-full object-cover object-center transition-transform hover:scale-105 duration-300"
+        loading="lazy"
+      />
+    </div>
+  );
+};
 
 export default function Catalogo() {
-  const { products } = useContext(ProductContext);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState('Todas');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // MODO DE COMPRA: 'minorista' | 'mayorista'
-  const [saleMode, setSaleMode] = useState('minorista');
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
+  // Cargar lista de productos desde el Backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error("Error al cargar productos del catálogo:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filtrado de productos por búsqueda y categoría
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                          p.description?.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'Todas' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    fetchProducts();
+  }, []);
+
+  // Función para agregar al carrito estructurado
+  const handleAddToCart = (product) => {
+    const savedCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+
+    const price = product.priceRetail || product.price || 0;
+    const productId = product._id || product.id;
+
+    const existingIndex = savedCart.findIndex((x) => (x._id || x.id) === productId);
+
+    let updatedCart = [];
+
+    if (existingIndex >= 0) {
+      updatedCart = savedCart.map((item, index) =>
+        index === existingIndex ? { ...item, qty: item.qty + 1 } : item
+      );
+    } else {
+      const newItem = {
+        _id: productId,
+        name: product.name || product.title || 'Producto Ámbar',
+        price: price,
+        priceRetail: price,
+        image: product.image || product.imagen || '',
+        stock: product.stock ?? 1,
+        qty: 1
+      };
+      updatedCart = [...savedCart, newItem];
+    }
+
+    localStorage.setItem('cartItems', JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event('storage'));
+
+    alert(`¡"${product.name}" agregado al carrito!`);
+  };
+
+  // Filtrado dinámico
+  const filteredProducts = products.filter((item) => {
+    const matchesCategory =
+      categoryFilter === 'Todas' ||
+      (item.category && item.category.toLowerCase() === categoryFilter.toLowerCase());
+
+    const matchesSearch =
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-stone-50 py-8 px-4 sm:px-6 max-w-6xl mx-auto font-sans text-stone-800">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 font-sans">
       
-      {/* 1. SELECTOR INTERACTIVO VENTA MINORISTA / MAYORISTA */}
-      <div className="bg-white border border-stone-200 p-4 mb-8 shadow-xs rounded-xs text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400 mb-3">
-          Modalidad de Compra
+      {/* CABECERA */}
+      <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+        <span className="text-xs font-bold uppercase tracking-widest text-rose-500">
+          Nuestra Colección
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 uppercase tracking-wider">
+          Catálogo de Productos
+        </h1>
+        <p className="text-xs text-stone-500 leading-relaxed">
+          Cosmética consciente con formulaciones botánicas de alta calidad.
         </p>
-
-        <div className="inline-flex p-1 bg-stone-100 rounded-none border border-stone-200">
-          <button
-            onClick={() => setSaleMode('minorista')}
-            className={`px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition ${
-              saleMode === 'minorista'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            🛒 Venta Minorista
-          </button>
-          
-          <button
-            onClick={() => setSaleMode('mayorista')}
-            className={`px-5 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition ${
-              saleMode === 'mayorista'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            📦 Venta Mayorista
-          </button>
-        </div>
-
-        {/* NOTA ACLARATORIA SEGÚN EL MODO SELECCIONADO */}
-        <div className="mt-3 text-xs font-light text-stone-600">
-          {saleMode === 'minorista' ? (
-            <p>Comprá desde 1 unidad con despacho a todo el país.</p>
-          ) : (
-            <p className="text-rose-700 font-normal">
-              🔥 <strong>Modo Mayorista Activado:</strong> Precios diferenciados para revendedoras aplicando las cantidades mínimas indicadas por producto.
-            </p>
-          )}
-        </div>
       </div>
 
-      {/* 2. FILTROS Y BUSCADOR */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 border-b border-stone-200 pb-5">
+      {/* FILTROS Y BÚSQUEDA */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8 bg-white p-4 rounded-xl border border-stone-200 shadow-xs">
         
-        {/* BUSCADOR */}
-        <div className="w-full md:w-80 relative">
-          <input 
+        <div className="w-full sm:w-72 relative">
+          <input
             type="text"
-            placeholder="Buscar por nombre o extracto..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-3 pr-8 py-2 border border-stone-300 bg-white text-xs text-stone-700 focus:outline-none focus:border-stone-800"
+            placeholder="Buscar cosmético..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
           />
-          <span className="absolute right-2.5 top-2.5 text-xs text-stone-400">🔍</span>
+          <span className="absolute left-2.5 top-2.5 text-xs text-stone-400">🔍</span>
         </div>
 
-        {/* CATEGORÍAS */}
-        <div className="flex flex-wrap gap-2 justify-center">
-          {['Todas', 'Faciales', 'Corporales', 'Capilares'].map((cat) => (
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-center">
+          {['Todas', 'Facial', 'Corporal', 'Capilar'].map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] border transition ${
-                selectedCategory === cat
-                  ? 'border-stone-900 bg-stone-900 text-white'
-                  : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                categoryFilter === cat
+                  ? 'bg-stone-900 text-white shadow-xs'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
               {cat}
             </button>
           ))}
         </div>
-
       </div>
 
-      {/* 3. GRILLA DE PRODUCTOS DINÁMICA */}
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-stone-200">
-          <p className="text-xs text-stone-500 uppercase tracking-widest">
-            No se encontraron productos en esta categoría o búsqueda.
+      {/* LISTADO DE PRODUCTOS */}
+      {loading ? (
+        <div className="text-center py-20 text-stone-400 text-xs italic space-y-2">
+          <span className="text-2xl block animate-spin">✨</span>
+          <p>Cargando nuestro catálogo...</p>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-stone-200 shadow-xs">
+          <span className="text-4xl">🍃</span>
+          <p className="text-xs text-stone-500 mt-2">
+            No encontramos productos que coincidan con tu búsqueda.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard 
-              key={product._id} 
-              product={product} 
-              saleMode={saleMode} 
-            />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredProducts.map((item) => {
+            const price = item.priceRetail || item.price || 0;
+            const inStock = item.stock > 0;
+
+            return (
+              <div
+                key={item._id}
+                className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group"
+              >
+                <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
+                  <SafeImage src={item.image} alt={item.name} className="w-full h-full" />
+                  {item.destacado && (
+                    <span className="absolute top-3 left-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                      ★ Destacado
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase text-stone-400 tracking-wider">
+                      {item.category || 'General'}
+                    </span>
+                    <h3 className="font-bold text-xs text-stone-800 line-clamp-1 mt-0.5">
+                      {item.name}
+                    </h3>
+                    <p className="text-[11px] text-stone-500 line-clamp-2 mt-1 leading-relaxed">
+                      {item.description || 'Sin descripción disponible.'}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-extrabold text-stone-900">
+                        ${price.toLocaleString('es-AR')}
+                      </p>
+                      <span className={`text-[9px] font-semibold ${inStock ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {inStock ? `Stock: ${item.stock} u.` : 'Agotado'}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      disabled={!inStock}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${
+                        inStock
+                          ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-xs active:scale-95'
+                          : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {inStock ? '🛒 Agregar' : 'Sin Stock'}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
         </div>
       )}
 

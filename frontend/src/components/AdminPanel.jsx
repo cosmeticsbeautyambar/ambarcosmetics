@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
@@ -13,7 +14,7 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Componente de Imagen Nitida sin deformación ni pixelado
+// Componente de Imagen Nítida sin deformación ni pixelado
 const SafeImage = ({ src, alt, className = "" }) => {
   const [error, setError] = useState(false);
 
@@ -40,6 +41,9 @@ const SafeImage = ({ src, alt, className = "" }) => {
 };
 
 export default function AdminPanel() {
+  const authContext = useContext(AuthContext);
+  const token = authContext?.token || localStorage.getItem('token');
+
   const [products, setProducts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -92,7 +96,6 @@ export default function AdminPanel() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validación básica de tamaño (Máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("La imagen es demasiado grande. Por favor seleccioná un archivo de menos de 5MB.");
       return;
@@ -121,7 +124,7 @@ export default function AdminPanel() {
       image: product.image || '',
       destacado: product.destacado || false
     });
-    // Si la imagen es un Link de internet seteamos la solapa URL, sino File
+
     if (product.image && product.image.startsWith('http')) {
       setImageMode('url');
     } else {
@@ -155,9 +158,14 @@ export default function AdminPanel() {
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(formData)
       });
 
@@ -165,7 +173,7 @@ export default function AdminPanel() {
         handleCancelEdit();
         await loadProducts();
       } else {
-        alert('Hubo un error al guardar el producto. Verificá los datos.');
+        alert('Hubo un error al guardar el producto. Verificá tus permisos o credenciales.');
       }
     } catch (error) {
       console.error("Error:", error);
@@ -175,14 +183,25 @@ export default function AdminPanel() {
     }
   };
 
-  // Eliminar Producto
+  // Eliminar Producto (Solución al error 401)
   const handleDelete = async (id) => {
     if (!window.confirm('¿Seguro que querés eliminar este producto?')) return;
 
     try {
-      const res = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+
       if (res.ok) {
         loadProducts();
+      } else {
+        alert('No tenés autorización para eliminar. Iniciá sesión nuevamente.');
       }
     } catch (err) {
       console.error("Error al eliminar:", err);
@@ -289,7 +308,6 @@ export default function AdminPanel() {
                 Imagen del Producto *
               </label>
               
-              {/* CAMBIADOR DE MODO */}
               <div className="flex gap-2 text-[11px]">
                 <button
                   type="button"
@@ -347,7 +365,7 @@ export default function AdminPanel() {
                 )}
               </div>
 
-              {/* VISTA PREVIA EN TIEMPO REAL NITIDA */}
+              {/* VISTA PREVIA EN TIEMPO REAL NÍTIDA */}
               <div className="flex flex-col items-center justify-center">
                 <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa HD</span>
                 <SafeImage
@@ -424,7 +442,6 @@ export default function AdminPanel() {
                 products.map((item) => (
                   <tr key={item._id} className="hover:bg-stone-50/80 transition">
                     <td className="p-2.5">
-                      {/* MINIATURA HD NÍTIDA SIN PIXELAR */}
                       <SafeImage
                         src={item.image}
                         alt={item.name}
