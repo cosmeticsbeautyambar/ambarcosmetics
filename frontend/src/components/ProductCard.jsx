@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { CartContext } from '../context/CartContext'; // Ajusta la ruta según la estructura de tu proyecto
+import { CartContext } from '../context/CartContext';
 
 export default function ProductCard({ product, saleMode }) {
   const { addToCart } = useContext(CartContext);
@@ -22,12 +22,12 @@ export default function ProductCard({ product, saleMode }) {
       return;
     }
 
-    // Enviamos el producto al CartContext real
+    // Enviamos el producto formateado al CartContext
     const productToCart = {
       ...product,
-      price: currentPrice, // Setea el precio activo (Minorista o Mayorista)
-      priceRetail: product.priceRetail || product.price,
-      priceWholesale: product.priceWholesale
+      price: Number(currentPrice || 0),
+      priceRetail: Number(product.priceRetail || product.price || 0),
+      priceWholesale: Number(product.priceWholesale || 0)
     };
 
     addToCart(productToCart, qtyToAdd);
