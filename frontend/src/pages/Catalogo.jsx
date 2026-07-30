@@ -14,14 +14,14 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// 🌟 SafeImage actualizado con soporte para fit="contain" o "cover"
+// 🌟 SafeImage con soporte optimizado para imágenes ampliadas
 const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {
     return (
       <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-xs select-none rounded-xl border border-stone-200 ${className}`}>
-        <span className="text-2xl mb-1">🖼️</span>
+        <span className="text-3xl mb-1">🖼️</span>
         <span>Sin foto</span>
       </div>
     );
@@ -30,7 +30,7 @@ const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
   const objectFitClass = fit === "contain" ? "object-contain" : "object-cover";
 
   return (
-    <div className={`overflow-hidden bg-stone-100/80 rounded-xl border border-stone-200/80 flex items-center justify-center ${className}`}>
+    <div className={`overflow-hidden flex items-center justify-center ${className}`}>
       <img
         src={src}
         alt={alt}
@@ -292,21 +292,21 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* 🌟 MODAL DETALLE AMPLIADO (MÁS GRANDE Y LEGIBLE EN PC Y MÓVILES) */}
+      {/* 🌟 MODAL DETALLE ULTRA AMPLIADO (IMAGEN XXL) */}
       {modalProduct && (
         <div 
-          className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
           onClick={() => setModalProduct(null)}
         >
           <div 
-            className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in-95 duration-200 my-auto"
+            className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in-95 duration-200 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             
-            {/* Botón de cierre más visible */}
+            {/* Botón de cierre flotante táctil */}
             <button
               onClick={() => setModalProduct(null)}
-              className="absolute top-3 right-3 z-20 bg-stone-900/80 hover:bg-stone-900 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg font-bold text-sm transition"
+              className="absolute top-4 right-4 z-30 bg-stone-900/90 hover:bg-stone-900 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-2xl font-bold text-base transition transform hover:scale-105 active:scale-95"
               title="Cerrar"
             >
               ✕
@@ -314,36 +314,36 @@ export default function Catalogo() {
 
             <div className="grid grid-cols-1 md:grid-cols-12">
               
-              {/* 🖼️ Contenedor de la Foto (Ocupa 7/12 del modal en PC) */}
-              <div className="md:col-span-7 bg-stone-100/70 p-4 sm:p-6 flex items-center justify-center border-b md:border-b-0 md:border-r border-stone-200 min-h-[300px] sm:min-h-[420px] md:min-h-[520px]">
+              {/* 🖼️ ÁREA DE LA FOTO (Ocupa 8 columnas de 12 en escritorio) */}
+              <div className="md:col-span-8 bg-stone-900 p-4 sm:p-6 md:p-8 flex items-center justify-center relative min-h-[380px] sm:min-h-[480px] md:min-h-[600px]">
                 <SafeImage
                   src={modalProduct.detailImage || modalProduct.image}
                   alt={modalProduct.name}
                   fit="contain"
-                  className="w-full h-full max-h-[350px] sm:max-h-[450px] md:max-h-[500px]"
+                  className="w-full h-full max-h-[420px] sm:max-h-[520px] md:max-h-[580px]"
                 />
               </div>
 
-              {/* 📝 Contenedor de Información (Ocupa 5/12 del modal en PC) */}
-              <div className="md:col-span-5 p-5 sm:p-8 flex flex-col justify-between space-y-6 bg-white">
+              {/* 📝 ÁREA DE INFORMACIÓN (Ocupa 4 columnas de 12) */}
+              <div className="md:col-span-4 p-6 sm:p-8 flex flex-col justify-between space-y-6 bg-white border-t md:border-t-0 md:border-l border-stone-100">
                 <div className="space-y-3">
                   <span className="text-xs font-bold tracking-widest text-rose-500 uppercase">
                     {modalProduct.category || 'Cosmética Natural'}
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-stone-900 uppercase tracking-tight leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-black text-stone-900 uppercase tracking-tight leading-snug">
                     {modalProduct.name}
                   </h2>
-                  <div className="w-12 h-0.5 bg-stone-200 my-2"></div>
-                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-h-48 sm:max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="w-12 h-1 bg-rose-500/30 rounded-full my-3"></div>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-h-52 sm:max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                     {modalProduct.description || 'Sin descripción detallada disponible para este producto.'}
                   </p>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-stone-100">
+                <div className="space-y-4 pt-6 border-t border-stone-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[11px] text-stone-400 uppercase tracking-wider font-semibold block">Precio</span>
-                      <span className="text-xl sm:text-2xl font-extrabold text-stone-900">
+                      <span className="text-[10px] text-stone-400 uppercase tracking-widest font-bold block">Precio final</span>
+                      <span className="text-2xl sm:text-3xl font-black text-stone-900">
                         ${Number(saleMode === 'mayorista' ? (modalProduct.priceWholesale || modalProduct.priceRetail) : modalProduct.priceRetail).toLocaleString('es-AR')}
                       </span>
                     </div>
@@ -358,13 +358,13 @@ export default function Catalogo() {
                       setModalProduct(null);
                     }}
                     disabled={modalProduct.stock <= 0}
-                    className={`w-full py-3.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+                    className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${
                       modalProduct.stock > 0
                         ? 'bg-stone-900 hover:bg-stone-800 text-white shadow-stone-900/20'
                         : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
                     }`}
                   >
-                    <span>🛒</span>
+                    <span className="text-base">🛒</span>
                     <span>{modalProduct.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}</span>
                   </button>
                 </div>
