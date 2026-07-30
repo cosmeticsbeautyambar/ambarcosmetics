@@ -97,37 +97,59 @@ export default function Carrito() {
     e.preventDefault();
     setIsProcessing(true);
 
+    // 1. Estructura ajustada para el backend
     const orderPayload = {
-      customer: formData,
+      customer: {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        dni: formData.dni,
+        taxType: formData.taxType,
+        city: formData.city,
+        address: formData.address,
+        notes: formData.notes
+      },
       items: cartItems.map((item) => {
         const unitPrice = getItemUnitPrice(item);
         return {
+          product: item._id, // 👈 Mapeado como 'product' e '_id' para máxima compatibilidad
           _id: item._id,
           name: item.name,
-          qty: item.qty,
+          qty: Number(item.qty),
           price: unitPrice
         };
       }),
       subtotal: computedSubtotal,
       discount: computedDiscount,
-      total: computedTotal
+      total: computedTotal,
+      status: 'pendiente_pago' // 👈 Estado por defecto para que coincida con el AdminPanel
     };
 
     try {
-      await fetch(`${API_URL}/orders`, {
+      // 2. Enviamos la petición POST
+      const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Error devuelto por la API:", response.status, errorText);
+      } else {
+        const dataCreated = await response.json();
+        console.log("✅ Pedido guardado en BD con éxito:", dataCreated);
+      }
     } catch (error) {
-      console.warn("No se pudo conectar con el servidor, enviando por WhatsApp:", error);
+      console.error("❌ Error de red/conexión al guardar el pedido:", error);
     } finally {
+      // 3. Armado y redirección a WhatsApp
       let message = `*✨ NUEVO PEDIDO - ÁMBAR COSMETICS ✨*\n\n`;
       message += `*👤 Cliente:* ${formData.fullName}\n`;
       message += `*📱 Teléfono:* ${formData.phone}\n`;
       message += `*📧 Email:* ${formData.email}\n`;
       message += `*📄 DNI/CUIT:* ${formData.dni} (${formData.taxType})\n`;
-      message += `*🏙️ Localidad:* ${formData.city}\n`; // 👈 Localidad agregada al mensaje
+      message += `*🏙️ Localidad:* ${formData.city}\n`;
       message += `*📍 Dirección:* ${formData.address}\n`;
       if (formData.notes) message += `*📝 Notas:* ${formData.notes}\n`;
       
