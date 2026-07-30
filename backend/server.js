@@ -19,7 +19,7 @@ app.use(cors({
 // Middlewares para JSON e imágenes (Ampliamos a 50mb para evitar sorpresas)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
+app.use('/api/orders', require('./routes/orderRoutes'));
 // Función para crear o actualizar la cuenta de la dueña en la BD
 const initAdmin = async () => {
   try {
