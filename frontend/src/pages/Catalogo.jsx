@@ -14,7 +14,8 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-const SafeImage = ({ src, alt, className = "" }) => {
+// 🌟 SafeImage actualizado con soporte para fit="contain" o "cover"
+const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {
@@ -26,13 +27,15 @@ const SafeImage = ({ src, alt, className = "" }) => {
     );
   }
 
+  const objectFitClass = fit === "contain" ? "object-contain" : "object-cover";
+
   return (
     <div className={`overflow-hidden bg-stone-100 rounded border border-stone-200/80 flex items-center justify-center ${className}`}>
       <img
         src={src}
         alt={alt}
         onError={() => setError(true)}
-        className="w-full h-full object-cover object-center transition-transform hover:scale-105 duration-300"
+        className={`w-full h-full ${objectFitClass} object-center transition-transform hover:scale-105 duration-300`}
         loading="lazy"
       />
     </div>
@@ -146,7 +149,7 @@ export default function Catalogo() {
           Cosmética consciente con formulaciones botánicas de alta calidad.
         </p>
 
-        {/* SELECTOR MODO COMPRA (MÁS GRANDE Y TÁCTIL) */}
+        {/* SELECTOR MODO COMPRA */}
         <div className="w-full sm:w-auto inline-flex p-1.5 bg-stone-100 rounded-2xl border border-stone-200 mt-4 shadow-inner gap-1">
           <button
             onClick={() => setSaleMode('minorista')}
@@ -230,7 +233,7 @@ export default function Catalogo() {
                 className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group cursor-pointer"
               >
                 <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
-                  <SafeImage src={item.image} alt={item.name} className="w-full h-full" />
+                  <SafeImage src={item.image} alt={item.name} className="w-full h-full" fit="cover" />
                   
                   {item.destacado && (
                     <span className="absolute top-3 left-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
@@ -289,7 +292,7 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* MODAL DETALLE */}
+      {/* 🌟 MODAL DETALLE CORREGIDO */}
       {modalProduct && (
         <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in duration-200">
@@ -302,11 +305,13 @@ export default function Catalogo() {
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="bg-stone-100 p-6 flex items-center justify-center border-b md:border-b-0 md:border-r border-stone-200">
+              {/* 🖼️ Contenedor de foto ampliada */}
+              <div className="bg-stone-50 p-4 flex items-center justify-center border-b md:border-b-0 md:border-r border-stone-200 min-h-[300px] md:min-h-[380px]">
                 <SafeImage
                   src={modalProduct.detailImage || modalProduct.image}
                   alt={modalProduct.name}
-                  className="w-full aspect-square rounded-xl shadow-xs object-cover"
+                  fit="contain"
+                  className="w-full h-full max-h-[340px] rounded-xl"
                 />
               </div>
 
