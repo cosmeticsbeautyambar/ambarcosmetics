@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CartContext } from '../context/CartContext';
 
 // Importaciones de Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -67,6 +68,7 @@ const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
+  const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,6 +91,12 @@ export default function Home() {
     } else {
       navigate('/catalogo');
     }
+  };
+
+  const handleAddDestacado = (item) => {
+    const price = item.priceRetail || item.price || 0;
+    addToCart({ ...item, price }, 1);
+    alert(`🛒 ¡"${item.name}" agregado al carrito!`);
   };
 
   return (
@@ -129,19 +137,6 @@ export default function Home() {
             <span className="text-stone-500 text-xs">🔍</span>
           </div>
 
-          <div className="flex items-center space-x-6 text-stone-700">
-            {/* BOTÓN CARRITO */}
-            <button 
-              onClick={() => navigate('/carrito')}
-              className="hover:text-stone-900 transition relative text-base flex items-center gap-1 font-semibold text-xs"
-              title="Ver Carrito"
-            >
-              🛍️ <span className="hidden sm:inline">Carrito</span>
-              <span className="bg-stone-900 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                2
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* MENÚ DE CATEGORÍAS HEADER */}
@@ -281,7 +276,7 @@ export default function Home() {
                 <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
                 <p className="text-xs font-semibold text-stone-900 pb-1">${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}</p>
                 <button 
-                  onClick={() => navigate('/carrito')}
+                  onClick={() => handleAddDestacado(item)}
                   className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none cursor-pointer"
                 >
                   Agregar al carrito
