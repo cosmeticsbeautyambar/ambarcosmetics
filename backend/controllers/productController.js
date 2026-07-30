@@ -32,7 +32,7 @@ exports.getTopProducts = async (req, res) => {
   }
 };
 
-// Crear producto (Admin / Dueña)
+// Crear producto (Admin / Dueña) - Soporta Minorista + Mayorista
 exports.createProduct = async (req, res) => {
   try {
     const { 
@@ -42,21 +42,25 @@ exports.createProduct = async (req, res) => {
       priceRetail, 
       price, 
       priceWholesale, 
+      minWholesaleQty,
+      isWholesale,
       stock, 
       image, 
       destacado 
     } = req.body;
 
-    // Asignamos el valor a ambos nombres para cumplir las reglas del modelo
-    const finalPrice = Number(priceRetail || price || 0);
+    const finalRetailPrice = Number(priceRetail || price || 0);
+    const finalWholesalePrice = Number(priceWholesale || 0);
 
     const productData = {
       name,
       category,
       description,
-      price: finalPrice,
-      priceRetail: finalPrice,
-      priceWholesale: Number(priceWholesale || 0),
+      price: finalRetailPrice,
+      priceRetail: finalRetailPrice,
+      priceWholesale: finalWholesalePrice,
+      minWholesaleQty: Number(minWholesaleQty || 1),
+      isWholesale: isWholesale !== undefined ? Boolean(isWholesale) : finalWholesalePrice > 0,
       stock: Number(stock || 0),
       image: image || '',
       destacado: Boolean(destacado),
@@ -72,16 +76,23 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Actualizar producto, precios o stock (Admin / Dueña)
+// Actualizar producto (Admin / Dueña) - Preserva lógica Mayorista
 exports.updateProduct = async (req, res) => {
   try {
     const updateData = { ...req.body };
     
-    // Si viene precio, aseguramos la equivalencia en ambos campos
     if (updateData.priceRetail || updateData.price) {
       const finalPrice = Number(updateData.priceRetail || updateData.price);
       updateData.price = finalPrice;
       updateData.priceRetail = finalPrice;
+    }
+
+    if (updateData.priceWholesale !== undefined) {
+      updateData.priceWholesale = Number(updateData.priceWholesale || 0);
+    }
+
+    if (updateData.minWholesaleQty !== undefined) {
+      updateData.minWholesaleQty = Number(updateData.minWholesaleQty || 1);
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(

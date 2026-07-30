@@ -42,11 +42,9 @@ const SafeImage = ({ src, alt, className = "" }) => {
 export default function AdminPanel() {
   const authContext = useContext(AuthContext);
 
-  // Búsqueda inteligente de Token leyendo 'userInfo'
   const getStoredToken = () => {
     if (authContext?.token) return authContext.token;
 
-    // Intentar leer desde 'userInfo' (donde guardas el objeto del usuario logueado)
     try {
       const rawUserInfo = localStorage.getItem('userInfo');
       if (rawUserInfo) {
@@ -57,11 +55,7 @@ export default function AdminPanel() {
       console.error("Error al leer userInfo de localStorage:", e);
     }
 
-    // Fallbacks secundarios
-    const directToken = localStorage.getItem('token') || localStorage.getItem('userToken') || localStorage.getItem('jwt');
-    if (directToken) return directToken;
-
-    return null;
+    return localStorage.getItem('token') || localStorage.getItem('userToken') || localStorage.getItem('jwt') || null;
   };
 
   const [products, setProducts] = useState([]);
@@ -76,6 +70,7 @@ export default function AdminPanel() {
     description: '',
     priceRetail: '',
     priceWholesale: '',
+    minWholesaleQty: '6',
     stock: '',
     image: '',
     destacado: false
@@ -135,6 +130,7 @@ export default function AdminPanel() {
       description: product.description || '',
       priceRetail: product.priceRetail || product.price || '',
       priceWholesale: product.priceWholesale || '',
+      minWholesaleQty: product.minWholesaleQty || '6',
       stock: product.stock ?? '',
       image: product.image || '',
       destacado: product.destacado || false
@@ -156,6 +152,7 @@ export default function AdminPanel() {
       description: '',
       priceRetail: '',
       priceWholesale: '',
+      minWholesaleQty: '6',
       stock: '',
       image: '',
       destacado: false
@@ -294,6 +291,7 @@ export default function AdminPanel() {
             />
           </div>
 
+          {/* SECCIÓN PRECIOS: MINORISTA Y MAYORISTA */}
           <div>
             <label className="block font-semibold mb-1 text-stone-700">Precio Minorista ($) *</label>
             <input
@@ -306,6 +304,33 @@ export default function AdminPanel() {
               onChange={handleChange}
               className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block font-semibold mb-1 text-amber-900">Precio Mayorista ($)</label>
+              <input
+                type="number"
+                name="priceWholesale"
+                min="0"
+                placeholder="Opcional"
+                value={formData.priceWholesale}
+                onChange={handleChange}
+                className="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-800"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1 text-amber-900">Mínimo Unidades</label>
+              <input
+                type="number"
+                name="minWholesaleQty"
+                min="1"
+                placeholder="6"
+                value={formData.minWholesaleQty}
+                onChange={handleChange}
+                className="w-full p-2.5 bg-amber-50/50 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-800"
+              />
+            </div>
           </div>
 
           <div>
@@ -441,8 +466,8 @@ export default function AdminPanel() {
                 <th className="p-3">Foto</th>
                 <th className="p-3">Producto</th>
                 <th className="p-3">Categoría</th>
-                <th className="p-3">Descripción</th>
-                <th className="p-3">Precio</th>
+                <th className="p-3">Precio Minorista</th>
+                <th className="p-3">Precio Mayorista</th>
                 <th className="p-3">Stock</th>
                 <th className="p-3 text-center">Acciones</th>
               </tr>
@@ -473,13 +498,20 @@ export default function AdminPanel() {
                       )}
                     </td>
                     <td className="p-3 text-stone-600 font-medium">{item.category}</td>
-                    <td className="p-3 text-stone-500 max-w-xs" title={item.description}>
-                      <p className="line-clamp-2 leading-relaxed">
-                        {item.description || <span className="italic text-stone-300">Sin descripción</span>}
-                      </p>
-                    </td>
                     <td className="p-3 font-bold text-stone-900">
                       ${Number(item.priceRetail || item.price || 0).toLocaleString('es-AR')}
+                    </td>
+                    <td className="p-3 font-semibold text-amber-900">
+                      {item.priceWholesale ? (
+                        <div>
+                          ${Number(item.priceWholesale).toLocaleString('es-AR')}
+                          <span className="block text-[9px] text-stone-400 font-normal">
+                            Min: {item.minWholesaleQty || 1} u.
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-stone-300 italic">N/A</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
