@@ -1,26 +1,38 @@
 import React, { useContext } from 'react';
-import { ProductContext } from './ProductContext';
+import { CartContext } from '../context/CartContext'; // Ajusta la ruta según la estructura de tu proyecto
 
 export default function ProductCard({ product, saleMode }) {
-  const { reduceStockOnSale } = useContext(ProductContext);
+  const { addToCart } = useContext(CartContext);
 
   const isWholesale = saleMode === 'mayorista';
-  const currentPrice = isWholesale ? product.priceWholesale : product.priceRetail;
+  const currentPrice = isWholesale 
+    ? (product.priceWholesale || product.priceRetail || product.price) 
+    : (product.priceRetail || product.price);
+    
   const isOutOfStock = product.stock <= 0;
 
-  const handleSimulateAdd = () => {
+  const handleAddToCart = () => {
     if (isOutOfStock) return;
 
-    const qtyToAdd = isWholesale ? (product.minWholesaleQty || 1) : 1;
+    // Si es mayorista agrega el mínimo configurado, si no, 1 unidad
+    const qtyToAdd = isWholesale ? Number(product.minWholesaleQty || 1) : 1;
     
     if (product.stock < qtyToAdd) {
       alert(`⚠️ Solo quedan ${product.stock} unidades disponibles.`);
       return;
     }
 
-    // Simular agregado/compra descontando stock
-    reduceStockOnSale(product._id, qtyToAdd);
-    alert(`🛒 ¡Agregado! (${qtyToAdd} u. en modo ${isWholesale ? 'Mayorista' : 'Minorista'})`);
+    // Enviamos el producto al CartContext real
+    const productToCart = {
+      ...product,
+      price: currentPrice, // Setea el precio activo (Minorista o Mayorista)
+      priceRetail: product.priceRetail || product.price,
+      priceWholesale: product.priceWholesale
+    };
+
+    addToCart(productToCart, qtyToAdd);
+    
+    alert(`🛒 ¡Agregado al carrito! (${qtyToAdd} u. en modo ${isWholesale ? 'Mayorista' : 'Minorista'})`);
   };
 
   return (
@@ -45,7 +57,7 @@ export default function ProductCard({ product, saleMode }) {
         )}
       </div>
 
-      {/* CONTENEDOR DE FOTO (SE AJUSTA AUTOMÁTICAMENTE A 1:1) */}
+      {/* CONTENEDOR DE FOTO */}
       <div className="w-full aspect-square bg-stone-50 mb-4 overflow-hidden relative">
         <img 
           src={product.image} 
@@ -77,12 +89,12 @@ export default function ProductCard({ product, saleMode }) {
               {isWholesale ? 'Precio Mayorista:' : 'Precio Individual:'}
             </span>
             <span className="text-sm font-bold text-stone-900">
-              ${currentPrice?.toLocaleString('es-AR')}
+              ${Number(currentPrice || 0).toLocaleString('es-AR')}
             </span>
           </div>
 
           <button
-            onClick={handleSimulateAdd}
+            onClick={handleAddToCart}
             disabled={isOutOfStock}
             className={`w-full py-2 text-[10px] font-bold uppercase tracking-[0.15em] transition ${
               isOutOfStock 
