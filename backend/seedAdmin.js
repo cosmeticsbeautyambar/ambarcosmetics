@@ -1,6 +1,5 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 
 const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
@@ -9,45 +8,34 @@ const adminPassword = 'ambar123456';
 const runSeed = async () => {
   try {
     const mongoUri = process.env.MONGO_URI;
-    if (!mongoUri) {
-      throw new Error('No se encontró MONGO_URI en las variables de entorno (.env)');
-    }
+    if (!mongoUri) throw new Error('No se encontró MONGO_URI');
 
     console.log('🍃 Conectando a MongoDB Atlas...');
     await mongoose.connect(mongoUri);
-    console.log('✅ Conectado con éxito.');
 
-    // 1. Borramos cualquier usuario con este email
-    console.log(`🧹 Limpiando registros previos de: ${adminEmail}...`);
+    console.log(`🧹 Limpiando registros previos...`);
     await User.deleteMany({ email: adminEmail });
 
-    // 2. Generamos el hash encriptado de la contraseña
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(adminPassword, salt);
-
-    // 3. Insertamos directo omitiendo hooks middleware (evita el error 'next is not a function')
-    const [newAdmin] = await User.insertMany([
-      {
-        name: 'Dueña Ámbar Cosmetics',
-        email: adminEmail,
-        password: hashedPassword,
-        role: 'admin',
-        isAdmin: true
-      }
-    ]);
+    // PASAMOS LA CONTRASEÑA EN TEXTO PLANO
+    // El hook .pre('save') de User.js la encriptará automáticamente una sola vez
+    const newAdmin = await User.create({
+      name: 'Dueña Ámbar Cosmetics',
+      email: adminEmail,
+      password: adminPassword,
+      role: 'admin'
+    });
 
     console.log('==================================================');
-    console.log('👑 ¡USUARIO ADMIN CREADO Y FIJADO CON ÉXITO!');
+    console.log('👑 ¡USUARIO ADMIN CREADO Y ENCRIPTADO CORRECTAMENTE!');
     console.log(`📌 ID: ${newAdmin._id}`);
     console.log(`📧 Email: ${adminEmail}`);
     console.log(`🔑 Contraseña: ${adminPassword}`);
     console.log('==================================================');
 
   } catch (error) {
-    console.error('❌ Error al ejecutar el script de Admin:', error.message);
+    console.error('❌ Error:', error.message);
   } finally {
     await mongoose.disconnect();
-    console.log('🔌 Conexión con MongoDB cerrada.');
     process.exit(0);
   }
 };
