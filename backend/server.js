@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs'); // Requerido para encriptar la contraseña
 require('dotenv').config();
 
 const User = require('./models/User');
@@ -12,21 +13,41 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Función para crear la cuenta de la dueña si no existe en la BD
+// Función para crear o actualizar la cuenta de la dueña en la BD
 const initAdmin = async () => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@ambarcosmetics.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Ambar2026!Admin';
+    const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
+    const adminPassword = 'ambar123456';
 
-    const adminExists = await User.findOne({ role: 'admin' });
-    if (!adminExists) {
+    // Generamos el hash encriptado de la contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(adminPassword, salt);
+
+    // Buscamos si ya existe la cuenta por email
+    const existingAdmin = await User.findOne({ email: adminEmail });
+
+    if (!existingAdmin) {
+      // Si no existe, la creamos desde cero
       await User.create({
         name: 'Dueña Ámbar Cosmetics',
         email: adminEmail,
-        password: adminPassword,
-        role: 'admin'
+        password: hashedPassword,
+        role: 'admin',
+        isAdmin: true
       });
-      console.log('👑 Cuenta de la Dueña (Admin) inicializada con éxito.');
+      console.log('👑 ¡Cuenta de la Dueña creada con éxito!');
+      console.log(`Email: ${adminEmail}`);
+      console.log(`Password: ${adminPassword}`);
+    } else {
+      // Si ya existía, aseguramos la contraseña y el rol de Admin
+      existingAdmin.password = hashedPassword;
+      existingAdmin.role = 'admin';
+      existingAdmin.isAdmin = true;
+      await existingAdmin.save();
+
+      console.log('🔄 ¡Cuenta de Admin actualizada con éxito!');
+      console.log(`Email: ${adminEmail}`);
+      console.log(`Password restablecida a: ${adminPassword}`);
     }
   } catch (error) {
     console.error('Error al inicializar cuenta admin:', error.message);
