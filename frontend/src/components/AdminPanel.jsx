@@ -1,384 +1,404 @@
-import React, { useState, useContext } from 'react';
-import { ProductContext } from './ProductContext';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+
+const getCleanApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
+  if ((url.match(/https?:\/\//g) || []).length > 1) {
+    const parts = url.split(/(?=https?:\/\/)/);
+    url = parts[parts.length - 1];
+  }
+  url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) url += '/api';
+  return url;
+};
+
+const API_URL = getCleanApiUrl();
+
+// Componente para manejar imágenes de forma segura sin romperse
+const SafeImage = ({ src, alt, className = "" }) => {
+  const [error, setError] = useState(false);
+
+  if (error || !src) {
+    return (
+      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] select-none ${className}`}>
+        <span>🖼️</span>
+        <span>Sin imagen</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setError(true)}
+      className={`${className} object-contain bg-stone-50/80 p-0.5 rounded border border-stone-200/80`}
+      loading="lazy"
+    />
+  );
+};
 
 export default function AdminPanel() {
-  const { products, addProduct, updateStock, updatePrices, deleteProduct } = useContext(ProductContext);
-  const { user, logout } = useContext(AuthContext);
-
+  const [products, setProducts] = useState([]);
+  const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Formulario de Alta
+  // Estado del Formulario
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Faciales',
+    category: 'Facial',
     description: '',
     priceRetail: '',
     priceWholesale: '',
-    minWholesaleQty: '6',
     stock: '',
-    image: ''
+    image: '',
+    destacado: false
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
-
-  // Procesador de imagen con autocrop/fit
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('La imagen no debe superar los 5MB');
-        return;
+  // Cargar productos
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/products`);
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setFormData({ ...formData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Error al cargar productos:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmitProduct = async (e) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
-    if (!formData.name || !formData.priceRetail || !formData.priceWholesale || !formData.stock) {
-      setErrorMessage('Por favor completá los campos obligatorios (*).');
-      return;
-    }
+  // Handler de inputs
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
-    setLoading(true);
-
-    const defaultImg = 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600';
-    
-    // Llamada asíncrona real al backend mediante el ProductContext
-    const response = await addProduct({
-      ...formData,
-      image: formData.image || defaultImg
+  // Cargar datos en modo edición
+  const handleEditClick = (product) => {
+    setEditingId(product._id);
+    setFormData({
+      name: product.name || '',
+      category: product.category || 'Facial',
+      description: product.description || '',
+      priceRetail: product.priceRetail || product.price || '',
+      priceWholesale: product.priceWholesale || '',
+      stock: product.stock ?? '',
+      image: product.image || '',
+      destacado: product.destacado || false
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    setLoading(false);
+  // Cancelar Edición
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      name: '',
+      category: 'Facial',
+      description: '',
+      priceRetail: '',
+      priceWholesale: '',
+      stock: '',
+      image: '',
+      destacado: false
+    });
+  };
 
-    if (response && response.success) {
-      setSuccessMessage('✨ ¡Producto publicado con éxito en MongoDB Atlas!');
-      // Limpiar formulario solo si la publicación en BD fue exitosa
-      setFormData({
-        name: '',
-        category: 'Faciales',
-        description: '',
-        priceRetail: '',
-        priceWholesale: '',
-        minWholesaleQty: '6',
-        stock: '',
-        image: ''
+  // Guardar (Crear o Actualizar)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const isEditing = Boolean(editingId);
+    const url = isEditing ? `${API_URL}/products/${editingId}` : `${API_URL}/products`;
+    const method = isEditing ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
-      setImagePreview(null);
-    } else {
-      setErrorMessage(response?.message || 'Error al conectar o guardar el producto en el servidor.');
+
+      if (response.ok) {
+        handleCancelEdit();
+        await loadProducts();
+      } else {
+        alert('Hubo un error al guardar el producto. Verificá los datos.');
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert('Error de conexión con el servidor.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Eliminar Producto
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Seguro que querés eliminar este producto?')) return;
+
+    try {
+      const res = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadProducts();
+      }
+    } catch (err) {
+      console.error("Error al eliminar:", err);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10 text-stone-800 font-sans">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-8 font-sans">
       
-      {/* CABECERA */}
-      <div className="flex justify-between items-center border-b border-stone-200 pb-4">
-        <div>
-          <span className="text-[10px] font-bold tracking-[0.25em] text-rose-400 uppercase">Ámbar Cosmetics</span>
-          <h1 className="text-xl font-light tracking-wide uppercase text-stone-900">Panel de Control de Stock & Precios</h1>
-          {user?.email && (
-            <p className="text-[11px] text-stone-500 mt-0.5">Sesión activa: <span className="font-semibold text-stone-700">{user.email}</span></p>
+      {/* 1. FORMULARIO DE CREACIÓN / EDICIÓN */}
+      <div className={`p-6 rounded-xl shadow-md border transition-colors ${
+        editingId ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-stone-200'
+      }`}>
+        <div className="flex justify-between items-center mb-5 pb-3 border-b border-stone-200">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{editingId ? '✏️' : '➕'}</span>
+            <h2 className="text-base font-bold text-stone-800">
+              {editingId ? 'Editar Producto' : 'Cargar Nuevo Producto'}
+            </h2>
+          </div>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-xs bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1.5 rounded-lg font-semibold transition"
+            >
+              ❌ Cancelar Edición
+            </button>
           )}
         </div>
-        <button 
-          onClick={logout} 
-          className="text-xs font-medium text-stone-500 hover:text-stone-900 underline uppercase tracking-wider"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
 
-      {/* ALERTAS DE ESTADO */}
-      {errorMessage && (
-        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-md text-center font-medium">
-          {errorMessage}
-        </div>
-      )}
-      {successMessage && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-md text-center font-medium">
-          {successMessage}
-        </div>
-      )}
-
-      {/* FORMULARIO DE ALTA DE PRODUCTO */}
-      <div className="bg-white border border-stone-200 p-6 shadow-xs">
-        <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-stone-700 mb-6 flex items-center gap-2">
-          <span>📦</span> Dar de Alta Nuevo Producto
-        </h2>
-
-        <form onSubmit={handleSubmitProduct} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* COLUMNA 1: FOTO & PREVIEW */}
-          <div className="space-y-3">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-stone-600">
-              Foto del Producto
-            </label>
-            
-            <div className="w-full aspect-square bg-stone-100 border-2 border-dashed border-stone-300 flex flex-col items-center justify-center relative overflow-hidden group">
-              {imagePreview ? (
-                <>
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-full h-full object-cover object-center" 
-                  />
-                  <div className="absolute inset-0 bg-stone-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider">
-                    Cambiar Foto
-                  </div>
-                </>
-              ) : (
-                <div className="text-center p-4">
-                  <span className="text-2xl block mb-1">📸</span>
-                  <span className="text-[10px] text-stone-500 font-light block">
-                    Formatos JPG, PNG (Ajuste a 1:1)
-                  </span>
-                </div>
-              )}
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-              />
-            </div>
-            <p className="text-[10px] text-stone-400 text-center italic">
-              Máximo recomendado: 5MB
-            </p>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-semibold mb-1 text-stone-700">Nombre del producto *</label>
+            <input
+              type="text"
+              name="name"
+              required
+              placeholder="Ej: Crema Hidratante Rosas"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+            />
           </div>
 
-          {/* COLUMNA 2: DETALLES BÁSICOS */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                Nombre del Cosmético *
-              </label>
-              <input 
-                type="text" 
-                placeholder="Ej: Labial Velvet Rosé" 
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-300 text-xs focus:outline-none focus:border-stone-800"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                Categoría *
-              </label>
-              <select 
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-300 text-xs focus:outline-none focus:border-stone-800 bg-white"
-              >
-                <option value="Faciales">Cosméticos Faciales</option>
-                <option value="Corporales">Cosméticos Corporales</option>
-                <option value="Capilares">Cosméticos Capilares</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                Descripción Breve
-              </label>
-              <textarea 
-                rows="3"
-                placeholder="Beneficios, textura o ingredientes principales..." 
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-300 text-xs focus:outline-none focus:border-stone-800"
-              />
-            </div>
-          </div>
-
-          {/* COLUMNA 3: PRECIOS DUALES Y STOCK */}
-          <div className="space-y-4 bg-stone-50 p-4 border border-stone-200">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-700 border-b border-stone-200 pb-1">
-              Valores & Stock
-            </h3>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                Precio Minorista ($) *
-              </label>
-              <input 
-                type="number" 
-                placeholder="8500" 
-                value={formData.priceRetail}
-                onChange={(e) => setFormData({ ...formData, priceRetail: e.target.value })}
-                className="w-full px-3 py-1.5 border border-stone-300 text-xs focus:outline-none focus:border-stone-800 bg-white"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                  Precio Mayorista ($) *
-                </label>
-                <input 
-                  type="number" 
-                  placeholder="5200" 
-                  value={formData.priceWholesale}
-                  onChange={(e) => setFormData({ ...formData, priceWholesale: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-stone-300 text-xs focus:outline-none focus:border-stone-800 bg-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                  Mín. Mayorista (u.)
-                </label>
-                <input 
-                  type="number" 
-                  placeholder="6" 
-                  value={formData.minWholesaleQty}
-                  onChange={(e) => setFormData({ ...formData, minWholesaleQty: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-stone-300 text-xs focus:outline-none focus:border-stone-800 bg-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-600 mb-1">
-                Stock Inicial disponible *
-              </label>
-              <input 
-                type="number" 
-                placeholder="20" 
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                className="w-full px-3 py-1.5 border border-stone-300 text-xs focus:outline-none focus:border-stone-800 bg-white"
-                required
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-stone-900 text-white py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-stone-800 transition shadow-xs mt-2 disabled:opacity-50"
+          <div>
+            <label className="block font-semibold mb-1 text-stone-700">Categoría *</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
             >
-              {loading ? 'Guardando en Servidor...' : 'Publicar Producto'}
+              <option value="Facial">Cosméticos Faciales</option>
+              <option value="Corporal">Cosméticos Corporales</option>
+              <option value="Capilar">Cosméticos Capilares</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-semibold mb-1 text-stone-700">Descripción detallada</label>
+            <textarea
+              name="description"
+              rows="3"
+              placeholder="Describí beneficios, modo de uso, textura..."
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1 text-stone-700">Precio Minorista ($) *</label>
+            <input
+              type="number"
+              name="priceRetail"
+              required
+              min="0"
+              placeholder="0.00"
+              value={formData.priceRetail}
+              onChange={handleChange}
+              className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1 text-stone-700">Stock Disponible *</label>
+            <input
+              type="number"
+              name="stock"
+              required
+              min="0"
+              placeholder="10"
+              value={formData.stock}
+              onChange={handleChange}
+              className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+            />
+          </div>
+
+          {/* INPUT IMAGEN + PREVISUALIZACIÓN */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end bg-stone-50 p-3 rounded-lg border border-stone-200">
+            <div className="sm:col-span-3">
+              <label className="block font-semibold mb-1 text-stone-700">
+                URL de la Imagen (Link directo de la foto)
+              </label>
+              <input
+                type="text"
+                name="image"
+                placeholder="https://ejemplo.com/foto-hd.jpg"
+                value={formData.image}
+                onChange={handleChange}
+                className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+              />
+              <p className="text-[10px] text-stone-400 mt-1">
+                Tip: Usá imágenes claras con fondo claro y buena resolución para evitar distorsiones.
+              </p>
+            </div>
+
+            {/* VISTA PREVIA EN TIEMPO REAL */}
+            <div className="flex flex-col items-center justify-center">
+              <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa</span>
+              <SafeImage
+                src={formData.image}
+                alt="Previsualización"
+                className="w-16 h-16 shadow-xs"
+              />
+            </div>
+          </div>
+
+          <div className="md:col-span-2 flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="destacado"
+              name="destacado"
+              checked={formData.destacado}
+              onChange={handleChange}
+              className="w-4 h-4 text-stone-900 rounded cursor-pointer"
+            />
+            <label htmlFor="destacado" className="font-semibold text-stone-700 cursor-pointer">
+              ¿Mostrar en "Productos Destacados" del Home?
+            </label>
+          </div>
+
+          <div className="md:col-span-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full py-3 text-white font-bold rounded-lg uppercase tracking-wider text-xs transition shadow-sm ${
+                isSubmitting
+                  ? 'bg-stone-400 cursor-not-allowed'
+                  : editingId
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-stone-900 hover:bg-stone-800'
+              }`}
+            >
+              {isSubmitting ? 'Guardando...' : editingId ? '💾 Guardar Cambios' : '➕ Crear Producto'}
             </button>
           </div>
-
         </form>
       </div>
 
-      {/* TABLA DE GESTIÓN Y ACTUALIZACIÓN EN TIEMPO REAL */}
-      <div className="bg-white border border-stone-200 p-6 shadow-xs">
+      {/* 2. TABLA DE INVENTARIO */}
+      <div className="bg-white p-6 rounded-xl shadow-md border border-stone-200">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xs font-bold tracking-[0.2em] uppercase text-stone-700">
-            Inventario & Edición Rápida ({products.length})
+          <h2 className="text-base font-bold text-stone-800 flex items-center gap-2">
+            <span>📦</span> Inventario ({products.length})
           </h2>
-          <span className="text-[10px] text-stone-400">
-            Los cambios se reflejan inmediatamente en el catálogo.
-          </span>
+          {loading && <span className="text-xs text-stone-400 italic">Cargando datos...</span>}
         </div>
-
+        
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-[10px] uppercase font-bold tracking-wider text-stone-500">
+              <tr className="bg-stone-100 text-stone-600 uppercase text-[10px] tracking-wider border-b border-stone-200">
+                <th className="p-3">Foto</th>
                 <th className="p-3">Producto</th>
                 <th className="p-3">Categoría</th>
-                <th className="p-3">Precio Minorista</th>
-                <th className="p-3">Precio Mayorista (Mín u.)</th>
-                <th className="p-3">Stock Actual</th>
+                <th className="p-3">Descripción</th>
+                <th className="p-3">Precio</th>
+                <th className="p-3">Stock</th>
                 <th className="p-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {products.map((p) => (
-                <tr key={p._id} className="hover:bg-stone-50/60 transition">
-                  {/* FOTO + NOMBRE */}
-                  <td className="p-3 flex items-center gap-3">
-                    <img 
-                      src={p.image} 
-                      alt={p.name} 
-                      className="w-10 h-10 object-cover rounded-none border border-stone-200 shrink-0" 
-                    />
-                    <div>
-                      <p className="font-semibold text-stone-800">{p.name}</p>
-                      <p className="text-[10px] text-stone-400 line-clamp-1 max-w-xs">{p.description}</p>
-                    </div>
-                  </td>
-
-                  {/* CATEGORÍA */}
-                  <td className="p-3 text-stone-600">{p.category}</td>
-
-                  {/* EDITAR PRECIO MINORISTA */}
-                  <td className="p-3">
-                    <div className="flex items-center gap-1">
-                      <span className="text-stone-400">$</span>
-                      <input 
-                        type="number" 
-                        value={p.priceRetail}
-                        onChange={(e) => updatePrices(p._id, e.target.value, p.priceWholesale)}
-                        className="w-20 px-2 py-1 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-stone-800"
-                      />
-                    </div>
-                  </td>
-
-                  {/* EDITAR PRECIO MAYORISTA */}
-                  <td className="p-3">
-                    <div className="flex items-center gap-1">
-                      <span className="text-stone-400">$</span>
-                      <input 
-                        type="number" 
-                        value={p.priceWholesale}
-                        onChange={(e) => updatePrices(p._id, p.priceRetail, e.target.value)}
-                        className="w-20 px-2 py-1 border border-stone-200 rounded-none text-xs focus:outline-none focus:border-stone-800"
-                      />
-                      <span className="text-[10px] text-stone-400 font-light">({p.minWholesaleQty || 1} u.)</span>
-                    </div>
-                  </td>
-
-                  {/* EDITAR STOCK EN VIVO */}
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        value={p.stock}
-                        onChange={(e) => updateStock(p._id, e.target.value)}
-                        className={`w-16 px-2 py-1 border rounded-none text-xs font-bold focus:outline-none ${
-                          p.stock === 0 
-                            ? 'border-rose-400 text-rose-600 bg-rose-50' 
-                            : 'border-stone-200 text-stone-800'
-                        }`}
-                      />
-                      <span className="text-[10px] text-stone-400">un.</span>
-                    </div>
-                  </td>
-
-                  {/* ELIMINAR */}
-                  <td className="p-3 text-center">
-                    <button 
-                      onClick={() => {
-                        if (confirm(`¿Bajar de catálogo "${p.name}"?`)) deleteProduct(p._id);
-                      }}
-                      className="text-stone-400 hover:text-rose-600 transition text-sm"
-                      title="Eliminar producto"
-                    >
-                      🗑️
-                    </button>
+              {products.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="7" className="p-6 text-center text-stone-400 italic">
+                    No hay productos registrados todavía.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                products.map((item) => (
+                  <tr key={item._id} className="hover:bg-stone-50/80 transition">
+                    <td className="p-2.5">
+                      {/* MINIATURA MÁS AMPLIA QUE NO SE DEFORMA */}
+                      <SafeImage
+                        src={item.image}
+                        alt={item.name}
+                        className="w-14 h-14"
+                      />
+                    </td>
+                    <td className="p-3 font-bold text-stone-800 max-w-[180px]">
+                      <div>{item.name}</div>
+                      {item.destacado && (
+                        <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-rose-100 text-rose-700 text-[9px] font-semibold rounded">
+                          ★ Destacado
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3 text-stone-600 font-medium">{item.category}</td>
+                    <td className="p-3 text-stone-500 max-w-xs" title={item.description}>
+                      <p className="line-clamp-2 leading-relaxed">
+                        {item.description || <span className="italic text-stone-300">Sin descripción</span>}
+                      </p>
+                    </td>
+                    <td className="p-3 font-bold text-stone-900">
+                      ${Number(item.priceRetail || item.price || 0).toLocaleString('es-AR')}
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        item.stock > 5 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                      }`}>
+                        {item.stock} u.
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center items-center gap-1.5">
+                        <button
+                          onClick={() => handleEditClick(item)}
+                          className="px-2.5 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-md font-semibold transition"
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item._id)}
+                          className="px-2.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-md font-semibold transition"
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
