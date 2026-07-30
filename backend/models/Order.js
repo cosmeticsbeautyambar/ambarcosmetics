@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  // 👤 Datos del Cliente (Compras directas o con cuenta)
+  // 👤 Datos del Cliente
   customer: {
     fullName: { type: String, required: true },
     email: { type: String, required: true },
@@ -9,10 +9,11 @@ const orderSchema = new mongoose.Schema({
     dni: { type: String, required: true },
     taxType: { type: String, default: 'Consumidor Final' },
     address: { type: String, required: true },
+    city: { type: String, required: true }, // 👈 Campo Localidad Agregado
     notes: { type: String, default: '' }
   },
 
-  // 🛍️ Lista de Productos en la Orden
+  // 🛍️ Productos en la Orden
   items: [
     {
       _id: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -34,7 +35,6 @@ const orderSchema = new mongoose.Schema({
     default: 'pendiente_pago' 
   },
 
-  // 📦 Flag de Control: Garantiza que el stock se reduzca SÓLO al despachar
   stockDeducted: { 
     type: Boolean, 
     default: false 

@@ -58,7 +58,7 @@ export default function AdminPanel() {
     return localStorage.getItem('token') || localStorage.getItem('userToken') || localStorage.getItem('jwt') || null;
   };
 
-  // 🌟 Estado de Navegación de Pestañas ('products' | 'orders')
+  // 🌟 Navegación de Pestañas ('products' | 'orders')
   const [activeTab, setActiveTab] = useState('products');
 
   // Estados de Productos
@@ -72,6 +72,7 @@ export default function AdminPanel() {
   // Estados de Pedidos
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -102,7 +103,7 @@ export default function AdminPanel() {
     }
   };
 
-  // Cargar Órdenes / Pedidos
+  // Cargar Pedidos
   const loadOrders = async () => {
     setOrdersLoading(true);
     try {
@@ -112,7 +113,7 @@ export default function AdminPanel() {
         setOrders(data);
       }
     } catch (err) {
-      console.error("Error al cargar órdenes:", err);
+      console.error("Error al cargar pedidos:", err);
     } finally {
       setOrdersLoading(false);
     }
@@ -123,14 +124,14 @@ export default function AdminPanel() {
     loadOrders();
   }, []);
 
-  // Cambiar estado de una orden
+  // Cambiar estado de un pedido
   const handleOrderStatusChange = async (orderId, newStatus) => {
     try {
       const activeToken = getStoredToken();
       const headers = { 'Content-Type': 'application/json' };
       if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
 
-      const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
+      const res = await fetch(`${API_URL}/orders/${orderId}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status: newStatus })
@@ -138,7 +139,7 @@ export default function AdminPanel() {
 
       if (res.ok) {
         await loadOrders();
-        await loadProducts(); // Recarga productos por si se descontó stock
+        await loadProducts(); // Recarga productos por si cambió el stock
       } else {
         alert("No se pudo actualizar el estado de la orden.");
       }
@@ -146,6 +147,16 @@ export default function AdminPanel() {
       console.error("Error al actualizar estado:", err);
       alert("Error de conexión al cambiar el estado.");
     }
+  };
+
+  // Copiar etiqueta de envío
+  const copyShippingData = (order) => {
+    const c = order.customer || {};
+    const text = `📦 DATOS DE ENVÍO - ÁMBAR COSMETICS\n----------------------------------\n👤 Destinatario: ${c.fullName}\n📱 WhatsApp: ${c.phone}\n📄 DNI/CUIT: ${c.dni} (${c.taxType})\n🏙️ Localidad: ${c.city || 'No especificada'}\n📍 Dirección: ${c.address}\n📝 Notas: ${c.notes || 'Sin observaciones'}\n💰 Total Pedido: $${order.total?.toLocaleString('es-AR')}`;
+    
+    navigator.clipboard.writeText(text);
+    setCopiedId(order._id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleChange = (e) => {
@@ -278,45 +289,78 @@ export default function AdminPanel() {
     }
   };
 
+  // 🚨 ORDENAR PEDIDOS POR PRIORIDAD / URGENCIA:
+  // 1. Pendiente de pago / Recibido (Máxima urgencia)
+  // 2. Pagado / Cobrado (Pendiente de empaque y despacho)
+  // 3. Despachado (Al final, ya completado)
+  // 4. Cancelado (Al final de todo)
+  const sortedOrders = [...orders].sort((a, b) => {
+    const priority = {
+      'pendiente_pago': 1,
+      'pagado': 2,
+      'despachado': 3,
+      'cancelado': 4
+    };
+
+    const pA = priority[a.status] || 99;
+    const pB = priority[b.status] || 99;
+
+    if (pA !== pB) {
+      return pA - pB;
+    }
+    // Si tienen la misma prioridad, el más reciente va primero
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  const pendingCount = orders.filter(o => o.status === 'pendiente_pago').length;
+
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6 font-sans">
       
-      {/* 🧭 NAVEGACIÓN DE PESTAÑAS DEL PANEL */}
-      <div className="flex border-b border-stone-200 gap-2">
-        <button
-          onClick={() => setActiveTab('products')}
-          className={`pb-3 px-4 font-bold text-xs uppercase tracking-wider transition border-b-2 ${
-            activeTab === 'products'
-              ? 'border-stone-900 text-stone-900'
-              : 'border-transparent text-stone-400 hover:text-stone-700'
-          }`}
-        >
-          📦 Inventario ({products.length})
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('orders');
-            loadOrders();
-          }}
-          className={`pb-3 px-4 font-bold text-xs uppercase tracking-wider transition border-b-2 flex items-center gap-1.5 ${
-            activeTab === 'orders'
-              ? 'border-stone-900 text-stone-900'
-              : 'border-transparent text-stone-400 hover:text-stone-700'
-          }`}
-        >
-          <span>🛍️ Pedidos</span>
-          {orders.filter(o => o.status === 'pendiente_pago').length > 0 && (
-            <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-              {orders.filter(o => o.status === 'pendiente_pago').length}
-            </span>
-          )}
-        </button>
+      {/* 🧭 NAVEGACIÓN DE PESTAÑAS Y HEADER DEL PANEL */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-200 pb-3 gap-4">
+        <div className="flex border-b sm:border-b-0 border-stone-200 gap-2">
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`pb-3 px-4 font-bold text-xs uppercase tracking-wider transition border-b-2 ${
+              activeTab === 'products'
+                ? 'border-stone-900 text-stone-900'
+                : 'border-transparent text-stone-400 hover:text-stone-700'
+            }`}
+          >
+            📦 Manejo de Stock ({products.length})
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('orders');
+              loadOrders();
+            }}
+            className={`pb-3 px-4 font-bold text-xs uppercase tracking-wider transition border-b-2 flex items-center gap-1.5 ${
+              activeTab === 'orders'
+                ? 'border-stone-900 text-stone-900'
+                : 'border-transparent text-stone-400 hover:text-stone-700'
+            }`}
+          >
+            <span>🛍️ Control de Pedidos</span>
+            {pendingCount > 0 && (
+              <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold animate-pulse">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeTab === 'orders' && pendingCount > 0 && (
+          <span className="text-xs bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5">
+            ⚠️ Tenés {pendingCount} pedido(s) pendiente(s) de atención
+          </span>
+        )}
       </div>
 
       {/* ================= PESTAÑA 1: INVENTARIO DE PRODUCTOS ================= */}
       {activeTab === 'products' && (
         <div className="space-y-8">
-          {/* 1. FORMULARIO DE CREACIÓN / EDICIÓN */}
+          {/* FORMULARIO DE CREACIÓN / EDICIÓN */}
           <div className={`p-6 rounded-xl shadow-md border transition-colors ${
             editingId ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-stone-200'
           }`}>
@@ -433,7 +477,7 @@ export default function AdminPanel() {
                 />
               </div>
 
-              {/* 1. IMAGEN MINIATURA */}
+              {/* IMAGEN MINIATURA */}
               <div className="md:col-span-2 bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3">
                 <div className="flex justify-between items-center border-b border-stone-200 pb-2">
                   <label className="block font-bold text-stone-800 text-xs">
@@ -503,7 +547,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* 2. FOTO AMPLIADA / DETALLE */}
+              {/* FOTO DETALLE */}
               <div className="md:col-span-2 bg-amber-50/30 p-4 rounded-lg border border-amber-200 space-y-3">
                 <div className="flex justify-between items-center border-b border-amber-200 pb-2">
                   <label className="block font-bold text-amber-900 text-xs">
@@ -605,11 +649,11 @@ export default function AdminPanel() {
             </form>
           </div>
 
-          {/* 2. TABLA DE INVENTARIO */}
+          {/* TABLA DE INVENTARIO DE PRODUCTOS */}
           <div className="bg-white p-6 rounded-xl shadow-md border border-stone-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-bold text-stone-800 flex items-center gap-2">
-                <span>📦</span> Inventario ({products.length})
+                <span>📦</span> Inventario Actual ({products.length})
               </h2>
               {loading && <span className="text-xs text-stone-400 italic">Cargando datos...</span>}
             </div>
@@ -715,132 +759,197 @@ export default function AdminPanel() {
       {/* ================= PESTAÑA 2: GESTIÓN DE PEDIDOS ================= */}
       {activeTab === 'orders' && (
         <div className="bg-white p-6 rounded-xl shadow-md border border-stone-200 space-y-4">
-          <div className="flex justify-between items-center border-b border-stone-100 pb-3">
+          
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-stone-100 pb-3 gap-2">
             <div>
               <h2 className="text-base font-bold text-stone-800 flex items-center gap-2">
-                <span>🛍️</span> Pedidos Registrados ({orders.length})
+                <span>🛍️</span> Gestión de Pedidos ({orders.length})
               </h2>
               <p className="text-xs text-stone-500">
-                Gestioná los pagos y despachos. El stock se descuenta automáticamente al marcar "Despachado".
+                Los pedidos están ordenados por urgencia. Los despachados pasan al fondo de la lista.
               </p>
             </div>
             <button
               onClick={loadOrders}
-              className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg font-semibold transition"
+              className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg font-semibold transition self-start sm:self-auto"
             >
               🔄 Actualizar Listado
             </button>
           </div>
 
           {ordersLoading ? (
-            <p className="text-xs text-stone-400 py-6 text-center italic">Cargando historial de pedidos...</p>
-          ) : orders.length === 0 ? (
+            <p className="text-xs text-stone-400 py-6 text-center italic">Cargando pedidos...</p>
+          ) : sortedOrders.length === 0 ? (
             <p className="text-xs text-stone-400 py-8 text-center italic">Aún no hay pedidos registrados.</p>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => {
-                const cleanPhone = order.customer?.phone ? order.customer.phone.replace(/[^0-9]/g, '') : '';
+              {sortedOrders.map((order) => {
+                const c = order.customer || {};
+                const cleanPhone = c.phone ? c.phone.replace(/[^0-9]/g, '') : '';
+                const isPending = order.status === 'pendiente_pago';
+                const isPaid = order.status === 'pagado';
+                const isDispatched = order.status === 'despachado';
+                const isCanceled = order.status === 'cancelado';
+
                 return (
-                  <div key={order._id} className="p-4 rounded-xl border border-stone-200 bg-stone-50/50 space-y-3">
+                  <div
+                    key={order._id}
+                    className={`p-4 rounded-xl border transition-all space-y-3 ${
+                      isPending
+                        ? 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-400/20 shadow-sm'
+                        : isPaid
+                        ? 'bg-blue-50/40 border-blue-200'
+                        : isDispatched
+                        ? 'bg-stone-50 border-stone-200 opacity-80'
+                        : 'bg-stone-100/50 border-stone-200 opacity-60'
+                    }`}
+                  >
                     
-                    {/* Encabezado del Pedido */}
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-stone-200 pb-2">
+                    {/* ENCABEZADO Y BADGE DE ESTADO */}
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-stone-200/60 pb-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-stone-400 uppercase">
-                            ID: {order._id.slice(-6)}
+                          <span className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider">
+                            Pedido #{order._id.slice(-6)}
                           </span>
                           <span className="text-[10px] text-stone-400">
                             • {new Date(order.createdAt).toLocaleDateString('es-AR')} {new Date(order.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <h3 className="text-xs font-bold text-stone-800 mt-0.5">
-                          {order.customer?.fullName || 'Cliente Sin Nombre'}
+
+                        <h3 className="text-xs font-bold text-stone-900 mt-0.5 flex items-center gap-2 flex-wrap">
+                          <span>👤 {c.fullName || 'Cliente Sin Nombre'}</span>
                           {cleanPhone && (
                             <a
                               href={`https://wa.me/549${cleanPhone}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="ml-2 inline-flex items-center gap-1 text-emerald-600 hover:underline font-semibold"
+                              className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition inline-flex items-center gap-1"
                             >
-                              💬 WhatsApp ({order.customer.phone})
+                              💬 WhatsApp ({c.phone})
                             </a>
                           )}
                         </h3>
-                        <p className="text-[11px] text-stone-500">
-                          📍 {order.customer?.address} | DNI: {order.customer?.dni} | {order.customer?.taxType}
-                        </p>
                       </div>
 
-                      {/* Tag de Estado */}
+                      {/* BADGES CON COLORES ALUSIVOS */}
                       <div>
-                        {order.status === 'pendiente_pago' && (
-                          <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full inline-block">
-                            ⏳ Pendiente de Pago
+                        {isPending && (
+                          <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-xs animate-pulse">
+                            ⏳ 1. Recibido / Pendiente
                           </span>
                         )}
-                        {order.status === 'pagado' && (
-                          <span className="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full inline-block">
-                            💳 Pago Recibido (Por enviar)
+                        {isPaid && (
+                          <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-xs">
+                            💳 2. Cobrado / Por Enviar
                           </span>
                         )}
-                        {order.status === 'despachado' && (
-                          <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-block">
-                            🚀 Despachado (Stock Descontado)
+                        {isDispatched && (
+                          <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1">
+                            🚀 3. Despachado
                           </span>
                         )}
-                        {order.status === 'cancelado' && (
-                          <span className="bg-stone-200 text-stone-600 text-xs font-bold px-3 py-1 rounded-full inline-block">
+                        {isCanceled && (
+                          <span className="bg-stone-300 text-stone-700 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1">
                             ❌ Cancelado
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Detalle de Productos */}
-                    <div className="bg-white p-3 rounded-lg border border-stone-200 text-xs space-y-1.5">
-                      <p className="text-[10px] font-bold text-stone-400 uppercase">Detalle del Pedido:</p>
-                      {order.items?.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-stone-700">
-                          <span>• {item.name} <strong>x{item.qty}</strong></span>
-                          <span className="font-semibold">${((item.price || 0) * item.qty).toLocaleString('es-AR')}</span>
-                        </div>
-                      ))}
+                    {/* DATOS DE ENVÍO Y CLIENTE */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="bg-white p-3 rounded-lg border border-stone-200 space-y-1">
+                        <p className="font-bold text-[10px] text-stone-400 uppercase tracking-wider">Información de Envío:</p>
+                        <p className="text-stone-700">📄 <strong>DNI/CUIT:</strong> {c.dni || 'S/D'} ({c.taxType || 'Consumidor Final'})</p>
+                        <p className="text-stone-900 font-semibold">🏙️ <strong>Localidad:</strong> {c.city || 'No especificada'}</p>
+                        <p className="text-stone-900 font-semibold">📍 <strong>Dirección:</strong> {c.address || 'Sin dirección'}</p>
+                        {c.notes && (
+                          <p className="text-stone-500 text-[11px] italic bg-amber-50 p-1.5 rounded border border-amber-200 mt-1">
+                            📝 <strong>Notas:</strong> {c.notes}
+                          </p>
+                        )}
+                      </div>
 
-                      <div className="border-t border-stone-100 pt-1.5 mt-2 flex justify-between font-extrabold text-stone-900">
-                        <span>TOTAL A PAGAR:</span>
-                        <span className="text-sm">${order.total?.toLocaleString('es-AR')}</span>
+                      {/* DETALLE DE PRODUCTOS Y TOTAL */}
+                      <div className="bg-white p-3 rounded-lg border border-stone-200 flex flex-col justify-between space-y-2">
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          <p className="font-bold text-[10px] text-stone-400 uppercase tracking-wider">Productos Pedidos:</p>
+                          {order.items?.map((item, idx) => (
+                            <div key={idx} className="flex justify-between text-stone-700">
+                              <span>• {item.name} <strong>x{item.qty}</strong></span>
+                              <span className="font-semibold">${((item.price || 0) * item.qty).toLocaleString('es-AR')}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="border-t border-stone-100 pt-1.5 flex justify-between font-extrabold text-stone-900 text-sm">
+                          <span>TOTAL A COBRAR:</span>
+                          <span className="text-emerald-700">${order.total?.toLocaleString('es-AR')}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Botones de Cambio de Estado */}
-                    <div className="flex flex-wrap gap-2 justify-end pt-1">
-                      {order.status === 'pendiente_pago' && (
+                    {/* BOTONES DE ACCIÓN */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-200/60">
+                      
+                      <button
+                        onClick={() => copyShippingData(order)}
+                        className="bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                      >
+                        <span>📋</span>
+                        <span>{copiedId === order._id ? '¡Etiqueta Copiada!' : 'Copiar Etiqueta de Envío'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold text-stone-400 uppercase mr-1">Cambiar a:</span>
+
+                        <button
+                          onClick={() => handleOrderStatusChange(order._id, 'pendiente_pago')}
+                          disabled={isPending}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                            isPending
+                              ? 'bg-amber-200 text-amber-900 cursor-default opacity-60'
+                              : 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
+                          }`}
+                        >
+                          ⏳ Recibido
+                        </button>
+
                         <button
                           onClick={() => handleOrderStatusChange(order._id, 'pagado')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition"
+                          disabled={isPaid}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                            isPaid
+                              ? 'bg-blue-200 text-blue-900 cursor-default opacity-60'
+                              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                          }`}
                         >
-                          ✓ Marcar Pago Recibido
+                          💳 Cobrado
                         </button>
-                      )}
 
-                      {order.status === 'pagado' && (
                         <button
                           onClick={() => handleOrderStatusChange(order._id, 'despachado')}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition"
+                          disabled={isDispatched}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                            isDispatched
+                              ? 'bg-emerald-200 text-emerald-900 cursor-default opacity-60'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                          }`}
                         >
-                          🚚 Marcar Despachado (Descontar Stock)
+                          🚚 Despachado
                         </button>
-                      )}
 
-                      {order.status !== 'despachado' && order.status !== 'cancelado' && (
-                        <button
-                          onClick={() => handleOrderStatusChange(order._id, 'cancelado')}
-                          className="bg-stone-200 hover:bg-rose-100 hover:text-rose-700 text-stone-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                        >
-                          Cancelar Pedido
-                        </button>
-                      )}
+                        {!isCanceled && (
+                          <button
+                            onClick={() => handleOrderStatusChange(order._id, 'cancelado')}
+                            className="bg-stone-200 hover:bg-rose-100 hover:text-rose-700 text-stone-600 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition"
+                          >
+                            ❌
+                          </button>
+                        )}
+                      </div>
+
                     </div>
 
                   </div>

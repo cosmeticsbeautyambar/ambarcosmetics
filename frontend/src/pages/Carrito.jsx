@@ -45,7 +45,7 @@ export default function Carrito() {
     dni: '',
     taxType: 'Consumidor Final',
     address: '',
-    city: '',
+    city: '', // 👈 Campo Localidad
     notes: ''
   });
 
@@ -74,7 +74,6 @@ export default function Carrito() {
     }
   };
 
-  // 🏷️ CÁLCULO DINÁMICO DE PRECIO UNITARIO REAL
   const getItemUnitPrice = (item) => {
     const qty = Number(item.qty || 1);
     const wholesalePrice = Number(item.priceWholesale || 0);
@@ -87,7 +86,6 @@ export default function Carrito() {
     return retailPrice;
   };
 
-  // 💰 SUBTOTAL Y TOTAL CALCULADOS EN VIVO
   const computedSubtotal = cartItems.reduce((acc, item) => {
     return acc + (getItemUnitPrice(item) * item.qty);
   }, 0);
@@ -95,7 +93,6 @@ export default function Carrito() {
   const computedDiscount = aplicaDescuento ? cartDiscount : 0;
   const computedTotal = Math.max(0, computedSubtotal - computedDiscount);
 
-  // 🚀 PROCESAR PEDIDO Y ENVIAR POR WHATSAPP
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -130,6 +127,7 @@ export default function Carrito() {
       message += `*📱 Teléfono:* ${formData.phone}\n`;
       message += `*📧 Email:* ${formData.email}\n`;
       message += `*📄 DNI/CUIT:* ${formData.dni} (${formData.taxType})\n`;
+      message += `*🏙️ Localidad:* ${formData.city}\n`; // 👈 Localidad agregada al mensaje
       message += `*📍 Dirección:* ${formData.address}\n`;
       if (formData.notes) message += `*📝 Notas:* ${formData.notes}\n`;
       
@@ -148,7 +146,7 @@ export default function Carrito() {
         message += `*Descuento PROMO:* -$${computedDiscount.toLocaleString('es-AR')}\n`;
       }
       message += `*💰 TOTAL A PAGAR:* $${computedTotal.toLocaleString('es-AR')}\n\n`;
-      message += `_¡Hola! Quisiera los datos bancarios para abonar la compra y confirmar el envío. ¡Muchas gracias!_`;
+      message += `_¡Hola! Quisiera los datos bancarios para abonar la compra y coordinar el envío. ¡Muchas gracias!_`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
@@ -163,7 +161,6 @@ export default function Carrito() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 font-sans">
       
-      {/* CABECERA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-stone-200 mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
@@ -366,13 +363,27 @@ export default function Carrito() {
                     </select>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="block font-semibold text-stone-700 mb-1">Dirección de Entrega / Entrecalle *</label>
+                  {/* 🌟 CAMPO LOCALIDAD */}
+                  <div>
+                    <label className="block font-semibold text-stone-700 mb-1">Localidad / Ciudad *</label>
+                    <input
+                      type="text"
+                      name="city"
+                      required
+                      placeholder="Ej: La Plata, Berisso, Ensenada..."
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 mb-1">Dirección / Entrecalle *</label>
                     <input
                       type="text"
                       name="address"
                       required
-                      placeholder="Calle 123, Piso 2 B"
+                      placeholder="Calle 123 N° 456, Piso 2 B"
                       value={formData.address}
                       onChange={handleInputChange}
                       className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
