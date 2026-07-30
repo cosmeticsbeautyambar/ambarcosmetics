@@ -63,6 +63,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageMode, setImageMode] = useState('file');
+  const [detailImageMode, setDetailImageMode] = useState('file'); // 🌟 Modo para foto de detalle
 
   const [formData, setFormData] = useState({
     name: '',
@@ -73,6 +74,7 @@ export default function AdminPanel() {
     minWholesaleQty: '6',
     stock: '',
     image: '',
+    detailImage: '', // 🌟 Nuevo campo para foto ampliada del pop-up
     destacado: false
   });
 
@@ -103,7 +105,7 @@ export default function AdminPanel() {
     }));
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (e, fieldName = 'image') => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -116,7 +118,7 @@ export default function AdminPanel() {
     reader.onloadend = () => {
       setFormData((prev) => ({
         ...prev,
-        image: reader.result
+        [fieldName]: reader.result
       }));
     };
     reader.readAsDataURL(file);
@@ -133,14 +135,12 @@ export default function AdminPanel() {
       minWholesaleQty: product.minWholesaleQty || '6',
       stock: product.stock ?? '',
       image: product.image || '',
+      detailImage: product.detailImage || '',
       destacado: product.destacado || false
     });
 
-    if (product.image && product.image.startsWith('http')) {
-      setImageMode('url');
-    } else {
-      setImageMode('file');
-    }
+    setImageMode(product.image?.startsWith('http') ? 'url' : 'file');
+    setDetailImageMode(product.detailImage?.startsWith('http') ? 'url' : 'file');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -155,6 +155,7 @@ export default function AdminPanel() {
       minWholesaleQty: '6',
       stock: '',
       image: '',
+      detailImage: '',
       destacado: false
     });
   };
@@ -347,10 +348,11 @@ export default function AdminPanel() {
             />
           </div>
 
+          {/* 1. IMAGEN MINIATURA (CATÁLOGO) */}
           <div className="md:col-span-2 bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3">
             <div className="flex justify-between items-center border-b border-stone-200 pb-2">
               <label className="block font-bold text-stone-800 text-xs">
-                Imagen del Producto *
+                📸 Imagen Miniatura (Catálogo y Home) *
               </label>
               
               <div className="flex gap-2 text-[11px]">
@@ -363,7 +365,7 @@ export default function AdminPanel() {
                       : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
                   }`}
                 >
-                  📁 Subir desde mi Dispositivo
+                  📁 Archivo
                 </button>
                 <button
                   type="button"
@@ -374,7 +376,7 @@ export default function AdminPanel() {
                       : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
                   }`}
                 >
-                  🌐 Usar Link URL
+                  🌐 URL
                 </button>
               </div>
             </div>
@@ -386,19 +388,17 @@ export default function AdminPanel() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleFileUpload}
+                      onChange={(e) => handleFileUpload(e, 'image')}
                       className="w-full text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-200 file:text-stone-800 hover:file:bg-stone-300 cursor-pointer"
                     />
-                    <p className="text-[10px] text-stone-400 mt-1">
-                      Soporta JPG, PNG, WEBP.
-                    </p>
+                    <p className="text-[10px] text-stone-400 mt-1">Soporta JPG, PNG, WEBP.</p>
                   </div>
                 ) : (
                   <div>
                     <input
                       type="text"
                       name="image"
-                      placeholder="https://ejemplo.com/foto-hd.jpg"
+                      placeholder="https://ejemplo.com/foto-miniatura.jpg"
                       value={formData.image}
                       onChange={handleChange}
                       className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
@@ -408,11 +408,81 @@ export default function AdminPanel() {
               </div>
 
               <div className="flex flex-col items-center justify-center">
-                <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa HD</span>
+                <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa</span>
                 <SafeImage
                   src={formData.image}
-                  alt="Previsualización"
+                  alt="Miniatura"
                   className="w-16 h-16 shadow-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 2. FOTO AMPLIADA / DETALLE (POP-UP) */}
+          <div className="md:col-span-2 bg-amber-50/30 p-4 rounded-lg border border-amber-200 space-y-3">
+            <div className="flex justify-between items-center border-b border-amber-200 pb-2">
+              <label className="block font-bold text-amber-900 text-xs">
+                🔍 Foto Ampliada (Para el Pop-up / Opcional)
+              </label>
+              
+              <div className="flex gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setDetailImageMode('file')}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    detailImageMode === 'file'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                  }`}
+                >
+                  📁 Archivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailImageMode('url')}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    detailImageMode === 'url'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                  }`}
+                >
+                  🌐 URL
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+              <div className="sm:col-span-3">
+                {detailImageMode === 'file' ? (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'detailImage')}
+                      className="w-full text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-200 file:text-amber-900 hover:file:bg-amber-300 cursor-pointer"
+                    />
+                    <p className="text-[10px] text-amber-700 mt-1">Si la dejás vacía, se usará automáticamente la foto miniatura.</p>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      name="detailImage"
+                      placeholder="https://ejemplo.com/foto-hd.jpg"
+                      value={formData.detailImage}
+                      onChange={handleChange}
+                      className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold text-amber-800 mb-1">Vista Previa HD</span>
+                <SafeImage
+                  src={formData.detailImage}
+                  alt="Detalle"
+                  className="w-16 h-16 shadow-xs border-amber-300"
                 />
               </div>
             </div>
@@ -463,7 +533,7 @@ export default function AdminPanel() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-stone-100 text-stone-600 uppercase text-[10px] tracking-wider border-b border-stone-200">
-                <th className="p-3">Foto</th>
+                <th className="p-3">Fotos</th>
                 <th className="p-3">Producto</th>
                 <th className="p-3">Categoría</th>
                 <th className="p-3">Precio Minorista</th>
@@ -482,12 +552,21 @@ export default function AdminPanel() {
               ) : (
                 products.map((item) => (
                   <tr key={item._id} className="hover:bg-stone-50/80 transition">
-                    <td className="p-2.5">
+                    <td className="p-2.5 flex gap-1 items-center">
                       <SafeImage
                         src={item.image}
                         alt={item.name}
-                        className="w-12 h-12"
+                        className="w-10 h-10"
+                        title="Miniatura"
                       />
+                      {item.detailImage && (
+                        <SafeImage
+                          src={item.detailImage}
+                          alt="Detalle"
+                          className="w-10 h-10 border-amber-300"
+                          title="Foto Detalle (Pop-up)"
+                        />
+                      )}
                     </td>
                     <td className="p-3 font-bold text-stone-800 max-w-[180px]">
                       <div>{item.name}</div>

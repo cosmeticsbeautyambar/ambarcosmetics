@@ -14,7 +14,6 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Componente para renderizado de imagen seguro
 const SafeImage = ({ src, alt, className = "" }) => {
   const [error, setError] = useState(false);
 
@@ -47,9 +46,9 @@ export default function Catalogo() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
-  const [saleMode, setSaleMode] = useState('minorista'); // 'minorista' | 'mayorista'
+  const [saleMode, setSaleMode] = useState('minorista');
+  const [modalProduct, setModalProduct] = useState(null); // 🌟 Estado para el Pop-up de Detalle
 
-  // Cargar lista de productos desde el Backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -68,8 +67,8 @@ export default function Catalogo() {
     fetchProducts();
   }, []);
 
-  // Función para agregar al carrito vía CartContext
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product, e) => {
+    if (e) e.stopPropagation(); // Evita que se abra el modal al hacer clic en agregar
     const isWholesale = saleMode === 'mayorista';
     const currentPrice = isWholesale
       ? (product.priceWholesale || product.priceRetail || product.price)
@@ -93,7 +92,6 @@ export default function Catalogo() {
     alert(`🛒 ¡"${product.name}" agregado al carrito! (${qtyToAdd} u.)`);
   };
 
-  // Filtrado dinámico
   const filteredProducts = products.filter((item) => {
     const matchesCategory =
       categoryFilter === 'Todas' ||
@@ -121,14 +119,12 @@ export default function Catalogo() {
           Cosmética consciente con formulaciones botánicas de alta calidad.
         </p>
 
-        {/* SELECTOR MODO COMPRA (MINORISTA / MAYORISTA) */}
+        {/* SELECTOR MODO COMPRA */}
         <div className="inline-flex p-1 bg-stone-100 rounded-xl border border-stone-200 mt-4">
           <button
             onClick={() => setSaleMode('minorista')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-              saleMode === 'minorista'
-                ? 'bg-white text-stone-900 shadow-xs'
-                : 'text-stone-500 hover:text-stone-800'
+              saleMode === 'minorista' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-800'
             }`}
           >
             🛍️ Venta Minorista
@@ -136,9 +132,7 @@ export default function Catalogo() {
           <button
             onClick={() => setSaleMode('mayorista')}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-              saleMode === 'mayorista'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-stone-500 hover:text-stone-800'
+              saleMode === 'mayorista' ? 'bg-amber-500 text-white shadow-xs' : 'text-stone-500 hover:text-stone-800'
             }`}
           >
             📦 Venta Mayorista
@@ -148,7 +142,6 @@ export default function Catalogo() {
 
       {/* FILTROS Y BÚSQUEDA */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8 bg-white p-4 rounded-xl border border-stone-200 shadow-xs">
-        
         <div className="w-full sm:w-72 relative">
           <input
             type="text"
@@ -166,9 +159,7 @@ export default function Catalogo() {
               key={cat}
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                categoryFilter === cat
-                  ? 'bg-stone-900 text-white shadow-xs'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                categoryFilter === cat ? 'bg-stone-900 text-white shadow-xs' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
               {cat}
@@ -186,9 +177,7 @@ export default function Catalogo() {
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-stone-200 shadow-xs">
           <span className="text-4xl">🍃</span>
-          <p className="text-xs text-stone-500 mt-2">
-            No encontramos productos que coincidan con tu búsqueda.
-          </p>
+          <p className="text-xs text-stone-500 mt-2">No encontramos productos que coincidan con tu búsqueda.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -204,7 +193,8 @@ export default function Catalogo() {
             return (
               <div
                 key={item._id}
-                className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group"
+                onClick={() => setModalProduct(item)} // 🌟 Al hacer clic en la tarjeta se abre el Pop-up
+                className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group cursor-pointer"
               >
                 <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
                   <SafeImage src={item.image} alt={item.name} className="w-full h-full" />
@@ -247,7 +237,7 @@ export default function Catalogo() {
                     </div>
 
                     <button
-                      onClick={() => handleAddToCart(item)}
+                      onClick={(e) => handleAddToCart(item, e)}
                       disabled={!inStock}
                       className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${
                         inStock
@@ -263,6 +253,71 @@ export default function Catalogo() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* 🌟 MODAL / POP-UP DE DETALLE */}
+      {modalProduct && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in duration-200">
+            
+            <button
+              onClick={() => setModalProduct(null)}
+              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white text-stone-800 w-8 h-8 rounded-full flex items-center justify-center shadow-md font-bold text-xs transition"
+            >
+              ✕
+            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="bg-stone-100 p-6 flex items-center justify-center border-b md:border-b-0 md:border-r border-stone-200">
+                <SafeImage
+                  src={modalProduct.detailImage || modalProduct.image}
+                  alt={modalProduct.name}
+                  className="w-full aspect-square rounded-xl shadow-xs object-cover"
+                />
+              </div>
+
+              <div className="p-6 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold tracking-widest text-rose-500 uppercase">
+                    {modalProduct.category}
+                  </span>
+                  <h2 className="text-lg font-extrabold text-stone-900 uppercase">
+                    {modalProduct.name}
+                  </h2>
+                  <p className="text-xs text-stone-600 leading-relaxed max-h-48 overflow-y-auto pr-1">
+                    {modalProduct.description || 'Sin descripción detallada para este producto.'}
+                  </p>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-stone-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-stone-400 uppercase tracking-wider block">Precio</span>
+                      <span className="text-base font-extrabold text-stone-900">
+                        ${Number(saleMode === 'mayorista' ? (modalProduct.priceWholesale || modalProduct.priceRetail) : modalProduct.priceRetail).toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded ${modalProduct.stock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      Stock: {modalProduct.stock} u.
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      handleAddToCart(modalProduct);
+                      setModalProduct(null);
+                    }}
+                    disabled={modalProduct.stock <= 0}
+                    className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl uppercase tracking-wider text-xs transition shadow-md"
+                  >
+                    🛒 Agregar al Carrito
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       )}
 
