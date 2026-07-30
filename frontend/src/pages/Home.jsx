@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
@@ -69,24 +69,68 @@ const photoGroups = chunkArray(allImages, 3);
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [allProducts, setAllProducts] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
+  const searchContainerRef = useRef(null);
 
+  // Cargar destacados y lista completa de productos para el buscador
   useEffect(() => {
     fetch(`${API_URL}/products/destacados`)
       .then((res) => {
-        if (!res.ok) throw new Error('API no disponible por el momento');
+        if (!res.ok) throw new Error('API no disponible');
         return res.json();
       })
       .then((data) => setDestacados(data))
       .catch((err) => console.warn("Aviso:", err.message));
+
+    fetch(`${API_URL}/products`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Error al cargar catálogo');
+        return res.json();
+      })
+      .then((data) => setAllProducts(data))
+      .catch((err) => console.warn("Aviso catálogo:", err.message));
   }, []);
+
+  // Cerrar el menú desplegable si se hace clic afuera del buscador
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filtrado dinámico en tiempo real
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (value.trim().length > 0) {
+      const filtered = allProducts.filter((product) =>
+        product.name?.toLowerCase().includes(value.toLowerCase()) ||
+        product.category?.toLowerCase().includes(value.toLowerCase())
+      );
+      setSearchResults(filtered);
+      setShowDropdown(true);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  };
 
   const handleAdminAccess = () => {
     navigate('/login');
   };
 
   const goToCatalogo = (category = '') => {
+    setShowDropdown(false);
     if (category) {
       navigate(`/catalogo?categoria=${encodeURIComponent(category)}`);
     } else {
@@ -94,9 +138,15 @@ export default function Home() {
     }
   };
 
-  // Manejar la búsqueda al presionar Enter o la lupa
+  const handleSelectProduct = (productId) => {
+    setShowDropdown(false);
+    setSearchTerm('');
+    navigate(`/catalogo?producto=${productId}`);
+  };
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setShowDropdown(false);
     if (searchTerm.trim()) {
       navigate(`/catalogo?busqueda=${encodeURIComponent(searchTerm.trim())}`);
     } else {
@@ -139,22 +189,59 @@ export default function Home() {
             </div>
           </div>
           
-          {/* BUSCADOR CONECTADO AL CATÁLOGO */}
-          <form 
-            onSubmit={handleSearchSubmit} 
-            className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1 w-1/3 bg-white/70 backdrop-blur-xs focus-within:ring-1 focus-within:ring-stone-800"
-          >
-            <input 
-              type="text" 
-              placeholder="Buscar productos..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent focus:outline-none text-xs text-stone-700 placeholder-stone-500" 
-            />
-            <button type="submit" className="text-stone-500 text-xs hover:text-stone-900 transition" title="Buscar">
-              🔍
-            </button>
-          </form>
+          {/* BUSCADOR DINÁMICO */}
+          <div className="hidden md:block w-1/3 relative" ref={searchContainerRef}>
+            <form 
+              onSubmit={handleSearchSubmit} 
+              className="flex items-center border border-stone-300/60 rounded-xs px-3 py-1 bg-white/70 backdrop-blur-xs focus-within:ring-1 focus-within:ring-stone-800"
+            >
+              <input 
+                type="text" 
+                placeholder="Buscar productos..." 
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onFocus={() => searchTerm.trim().length > 0 && setShowDropdown(true)}
+                className="w-full bg-transparent focus:outline-none text-xs text-stone-700 placeholder-stone-500" 
+              />
+              <button type="submit" className="text-stone-500 text-xs hover:text-stone-900 transition" title="Buscar">
+                🔍
+              </button>
+            </form>
+
+            {/* DESPLEGABLE CON RESULTADOS AL INSTANTE */}
+            {showDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 shadow-lg rounded-xs z-50 max-h-64 overflow-y-auto divide-y divide-stone-100">
+                {searchResults.length > 0 ? (
+                  searchResults.map((product) => (
+                    <div
+                      key={product._id}
+                      onClick={() => handleSelectProduct(product._id)}
+                      className="flex items-center gap-3 p-2 hover:bg-stone-50 cursor-pointer transition"
+                    >
+                      {product.image && (
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-9 h-9 object-cover rounded-xs border border-stone-100 shrink-0" 
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-stone-800 truncate uppercase">{product.name}</p>
+                        <p className="text-[10px] text-stone-400 uppercase tracking-wider">{product.category}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-stone-900 shrink-0">
+                        ${(product.priceRetail || product.price || 0).toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-xs text-stone-400">
+                    No se encontraron productos
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
         </div>
 
