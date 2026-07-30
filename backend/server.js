@@ -19,35 +19,24 @@ const initAdmin = async () => {
     const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
     const adminPassword = 'ambar123456';
 
-    // Generamos el hash encriptado de la contraseña
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(adminPassword, salt);
-
-    // Buscamos si ya existe la cuenta por email
+    // Buscamos si ya existe
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (!existingAdmin) {
-      // Si no existe, la creamos desde cero
       await User.create({
         name: 'Dueña Ámbar Cosmetics',
         email: adminEmail,
-        password: hashedPassword,
+        password: adminPassword, // Pasa directa por si el schema tiene .pre('save')
         role: 'admin',
         isAdmin: true
       });
       console.log('👑 ¡Cuenta de la Dueña creada con éxito!');
-      console.log(`Email: ${adminEmail}`);
-      console.log(`Password: ${adminPassword}`);
     } else {
-      // Si ya existía, aseguramos la contraseña y el rol de Admin
-      existingAdmin.password = hashedPassword;
+      existingAdmin.password = adminPassword;
       existingAdmin.role = 'admin';
       existingAdmin.isAdmin = true;
-      await existingAdmin.save();
-
-      console.log('🔄 ¡Cuenta de Admin actualizada con éxito!');
-      console.log(`Email: ${adminEmail}`);
-      console.log(`Password restablecida a: ${adminPassword}`);
+      await existingAdmin.save(); // Dispara los middlewares del esquema
+      console.log('🔄 ¡Cuenta de Admin re-sincronizada con éxito!');
     }
   } catch (error) {
     console.error('Error al inicializar cuenta admin:', error.message);
