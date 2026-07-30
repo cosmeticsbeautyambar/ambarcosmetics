@@ -2,10 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
-// 📱 NÚMERO DE WHATSAPP OFICIAL DE LA TIENDA
 const WHATSAPP_NUMBER = '5492213064797';
 
-// 🌟 CARGA AUTOMÁTICA DE IMÁGENES DE LA CARPETA ASSETS/RESEÑAS
 const reviewModules = import.meta.glob('../assets/reseñas/*.{png,jpg,jpeg,webp,PNG,JPG,WEBP}', {
   eager: true,
   import: 'default'
@@ -29,21 +27,17 @@ export default function Carrito() {
     updateQuantity,
     removeFromCart,
     clearCart,
-    cartSubtotal,
     cartDiscount,
-    cartTotal,
     aplicaDescuento
   } = useContext(CartContext);
 
   const navigate = useNavigate();
 
-  // Estados del Proceso de Compra
-  const [step, setStep] = useState('cart'); // 'cart' | 'checkout'
+  const [step, setStep] = useState('cart');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
-  const [showReviews, setShowReviews] = useState(true); // Toggle sutil para reseñas
+  const [showReviews, setShowReviews] = useState(true);
 
-  // Datos para Facturación y Envío
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -55,7 +49,6 @@ export default function Carrito() {
     notes: ''
   });
 
-  // Rotación Automática de Reseñas de WhatsApp
   useEffect(() => {
     if (reviewImages.length === 0) return;
     const interval = setInterval(() => {
@@ -81,19 +74,28 @@ export default function Carrito() {
     }
   };
 
-  // 🏷️ FUNCIÓN PARA OBTENER PRECIO UNITARIO REAL (MAYORISTA VS MINORISTA)
+  // 🏷️ CÁLCULO DINÁMICO DE PRECIO UNITARIO REAL
   const getItemUnitPrice = (item) => {
     const qty = Number(item.qty || 1);
-    const minQty = Number(item.minWholesaleQty || 6);
-    const wholesalePrice = Number(item.priceWholesale);
+    const wholesalePrice = Number(item.priceWholesale || 0);
+    const retailPrice = Number(item.priceRetail || item.price || 0);
+    const minQty = Number(item.minWholesaleQty) > 0 ? Number(item.minWholesaleQty) : 1;
 
     if (wholesalePrice > 0 && qty >= minQty) {
       return wholesalePrice;
     }
-    return Number(item.priceRetail || item.price || 0);
+    return retailPrice;
   };
 
-  // 🚀 PROCESAR PEDIDO: DESCONTAR STOCK Y ENVIAR POR WHATSAPP
+  // 💰 SUBTOTAL Y TOTAL CALCULADOS EN VIVO
+  const computedSubtotal = cartItems.reduce((acc, item) => {
+    return acc + (getItemUnitPrice(item) * item.qty);
+  }, 0);
+
+  const computedDiscount = aplicaDescuento ? cartDiscount : 0;
+  const computedTotal = Math.max(0, computedSubtotal - computedDiscount);
+
+  // 🚀 PROCESAR PEDIDO Y ENVIAR POR WHATSAPP
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -109,22 +111,20 @@ export default function Carrito() {
           price: unitPrice
         };
       }),
-      subtotal: cartSubtotal,
-      discount: cartDiscount,
-      total: cartTotal
+      subtotal: computedSubtotal,
+      discount: computedDiscount,
+      total: computedTotal
     };
 
     try {
-      // 1. Envía la orden a /api/orders
       await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)
       });
     } catch (error) {
-      console.warn("No se pudo conectar con el servidor, procesando pedido por WhatsApp de todos modos:", error);
+      console.warn("No se pudo conectar con el servidor, enviando por WhatsApp:", error);
     } finally {
-      // 2. Construir mensaje personalizado para WhatsApp con precios ajustados
       let message = `*✨ NUEVO PEDIDO - ÁMBAR COSMETICS ✨*\n\n`;
       message += `*👤 Cliente:* ${formData.fullName}\n`;
       message += `*📱 Teléfono:* ${formData.phone}\n`;
@@ -137,22 +137,22 @@ export default function Carrito() {
       cartItems.forEach((item) => {
         const unitPrice = getItemUnitPrice(item);
         const itemTotal = unitPrice * item.qty;
-        const isWholesale = item.priceWholesale > 0 && item.qty >= (item.minWholesaleQty || 6);
+        const minQty = Number(item.minWholesaleQty) > 0 ? Number(item.minWholesaleQty) : 1;
+        const isWholesale = Number(item.priceWholesale) > 0 && item.qty >= minQty;
         
         message += `• ${item.name} x${item.qty} - $${itemTotal.toLocaleString('es-AR')}${isWholesale ? ' *(Precio Mayorista)*' : ''}\n`;
       });
 
-      message += `\n*Subtotal:* $${cartSubtotal.toLocaleString('es-AR')}\n`;
+      message += `\n*Subtotal:* $${computedSubtotal.toLocaleString('es-AR')}\n`;
       if (aplicaDescuento) {
-        message += `*Descuento PROMO:* -$${cartDiscount.toLocaleString('es-AR')}\n`;
+        message += `*Descuento PROMO:* -$${computedDiscount.toLocaleString('es-AR')}\n`;
       }
-      message += `*💰 TOTAL A PAGAR:* $${cartTotal.toLocaleString('es-AR')}\n\n`;
+      message += `*💰 TOTAL A PAGAR:* $${computedTotal.toLocaleString('es-AR')}\n\n`;
       message += `_¡Hola! Quisiera los datos bancarios para abonar la compra y confirmar el envío. ¡Muchas gracias!_`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
 
-      // 3. Limpiar carrito y abrir WhatsApp
       clearCart();
       setIsProcessing(false);
       window.open(whatsappUrl, '_blank');
@@ -163,7 +163,7 @@ export default function Carrito() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 font-sans">
       
-      {/* CABECERA Y NAVEGACIÓN DE PASOS */}
+      {/* CABECERA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-stone-200 mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
@@ -193,7 +193,6 @@ export default function Carrito() {
       </div>
 
       {cartItems.length === 0 ? (
-        /* CARRITO VACÍO */
         <div className="text-center py-16 bg-white rounded-xl border border-stone-200 shadow-xs space-y-4">
           <span className="text-5xl">💄</span>
           <h3 className="text-base font-bold text-stone-800">El carrito está vacío</h3>
@@ -210,15 +209,14 @@ export default function Carrito() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* COLUMNA PRINCIPAL (ITEMS O CHECKOUT) */}
           <div className="lg:col-span-7 space-y-6">
             
             {step === 'cart' ? (
-              /* PASO 1: LISTA DE PRODUCTOS */
               <div className="space-y-3">
                 {cartItems.map((item) => {
                   const unitPrice = getItemUnitPrice(item);
-                  const isWholesale = item.priceWholesale > 0 && item.qty >= (item.minWholesaleQty || 6);
+                  const minQty = Number(item.minWholesaleQty) > 0 ? Number(item.minWholesaleQty) : 1;
+                  const isWholesale = Number(item.priceWholesale) > 0 && item.qty >= minQty;
 
                   return (
                     <div
@@ -291,7 +289,6 @@ export default function Carrito() {
                 </div>
               </div>
             ) : (
-              /* PASO 2: FORMULARIO DE FACTURACIÓN Y ENVÍO */
               <form id="checkout-form" onSubmit={handlePaymentSubmit} className="bg-white p-6 rounded-xl border border-stone-200 shadow-xs space-y-4 text-xs">
                 <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
                   <h3 className="font-bold text-stone-800 text-sm flex items-center gap-2">
@@ -397,14 +394,14 @@ export default function Carrito() {
               </form>
             )}
 
-            {/* 💬 WIDGET COMPACTO Y SUTIL DE RESEÑAS (OPTIMIZADO PARA MÓVILES) */}
+            {/* RESEÑAS */}
             <div className="bg-stone-900 text-white rounded-xl shadow-sm border border-stone-800 overflow-hidden text-xs">
               <div 
                 onClick={() => setShowReviews(!showReviews)}
                 className="flex justify-between items-center p-3 cursor-pointer select-none hover:bg-stone-800/80 transition"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-400 text-xs">⭐ 4.9</span>
+                  <span className="text-amber-400 text-xs">⭐ Reseñas</span>
                   <span className="font-semibold text-stone-200 text-[11px]">Opiniones de Clientes</span>
                 </div>
                 <button type="button" className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">
@@ -463,7 +460,7 @@ export default function Carrito() {
 
           </div>
 
-          {/* COLUMNA DERECHA: RESUMEN DE PAGOS Y ENVIAR */}
+          {/* RESUMEN */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm sticky top-6 space-y-5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 border-b border-stone-100 pb-3 flex items-center justify-between">
@@ -474,27 +471,26 @@ export default function Carrito() {
               <div className="space-y-2.5 text-xs text-stone-600">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-semibold">${cartSubtotal.toLocaleString('es-AR')}</span>
+                  <span className="font-semibold">${computedSubtotal.toLocaleString('es-AR')}</span>
                 </div>
 
                 {aplicaDescuento ? (
                   <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
                     <span>✨ Descuento PROMO:</span>
-                    <span>-${cartDiscount.toLocaleString('es-AR')}</span>
+                    <span>-${computedDiscount.toLocaleString('es-AR')}</span>
                   </div>
                 ) : (
                   <p className="text-[10px] text-stone-500 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/80 italic">
-                    💡 Sumá ${(50000 - cartSubtotal).toLocaleString('es-AR')} más para obtener beneficio extra.
+                    💡 Sumá ${(50000 - computedSubtotal).toLocaleString('es-AR')} más para obtener beneficio extra.
                   </p>
                 )}
 
                 <div className="flex justify-between text-sm font-extrabold text-stone-900 pt-3 border-t border-stone-100">
                   <span>Total Final:</span>
-                  <span className="text-base text-stone-900">${cartTotal.toLocaleString('es-AR')}</span>
+                  <span className="text-base text-stone-900">${computedTotal.toLocaleString('es-AR')}</span>
                 </div>
               </div>
 
-              {/* BOTONES DE ACCIÓN */}
               {step === 'cart' ? (
                 <button
                   onClick={() => setStep('checkout')}
@@ -527,7 +523,6 @@ export default function Carrito() {
                 </button>
               )}
 
-              {/* BADGES DE SEGURIDAD Y MEDIOS DE PAGO */}
               <div className="pt-2 border-t border-stone-100 space-y-2 text-center">
                 <div className="flex items-center justify-center gap-3 text-stone-400 text-lg">
                   <span title="WhatsApp Directo">📱</span>

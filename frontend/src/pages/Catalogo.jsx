@@ -47,7 +47,10 @@ export default function Catalogo() {
   const [categoryFilter, setCategoryFilter] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [saleMode, setSaleMode] = useState('minorista');
-  const [modalProduct, setModalProduct] = useState(null); // 🌟 Estado para el Pop-up de Detalle
+  const [modalProduct, setModalProduct] = useState(null);
+  
+  // 🌟 Estado para el Toast Centrado sutil
+  const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -67,29 +70,38 @@ export default function Catalogo() {
     fetchProducts();
   }, []);
 
+  const showToast = (name, qty) => {
+    setToastMessage({ name, qty });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 2500);
+  };
+
   const handleAddToCart = (product, e) => {
-    if (e) e.stopPropagation(); // Evita que se abra el modal al hacer clic en agregar
+    if (e) e.stopPropagation();
     const isWholesale = saleMode === 'mayorista';
     const currentPrice = isWholesale
       ? (product.priceWholesale || product.priceRetail || product.price)
       : (product.priceRetail || product.price);
 
-    const qtyToAdd = isWholesale ? Number(product.minWholesaleQty || 1) : 1;
+    const minQty = Number(product.minWholesaleQty) > 0 ? Number(product.minWholesaleQty) : 1;
+    const qtyToAdd = isWholesale ? minQty : 1;
 
     if (product.stock < qtyToAdd) {
-      alert(`⚠️ Solo quedan ${product.stock} unidades disponibles.`);
+      showToast(`⚠️ Solo quedan ${product.stock} u.`, 0);
       return;
     }
 
     const productToCart = {
       ...product,
+      minWholesaleQty: minQty,
       price: Number(currentPrice || 0),
       priceRetail: Number(product.priceRetail || product.price || 0),
       priceWholesale: Number(product.priceWholesale || 0)
     };
 
     addToCart(productToCart, qtyToAdd);
-    alert(`🛒 ¡"${product.name}" agregado al carrito! (${qtyToAdd} u.)`);
+    showToast(product.name, qtyToAdd);
   };
 
   const filteredProducts = products.filter((item) => {
@@ -105,9 +117,24 @@ export default function Catalogo() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 font-sans">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 font-sans relative">
       
-      {/* CABECERA */}
+      {/* 🌟 TOAST NOTIFICACIÓN CENTRADA Y SUTIL */}
+      {toastMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/20 backdrop-blur-[2px] pointer-events-none animate-in fade-in duration-200">
+          <div className="bg-stone-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-stone-700 flex items-center gap-3 max-w-xs w-full text-center justify-center pointer-events-auto">
+            <span className="text-xl">✨</span>
+            <div>
+              <p className="font-bold text-xs text-stone-100">{toastMessage.name}</p>
+              <p className="text-[11px] text-stone-300">
+                {toastMessage.qty > 0 ? `¡Agregado al carrito! (${toastMessage.qty} u.)` : 'Stock insuficiente'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CABECERA Y SELECTOR DE MODO */}
       <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
         <span className="text-xs font-bold uppercase tracking-widest text-rose-500">
           Nuestra Colección
@@ -119,23 +146,29 @@ export default function Catalogo() {
           Cosmética consciente con formulaciones botánicas de alta calidad.
         </p>
 
-        {/* SELECTOR MODO COMPRA */}
-        <div className="inline-flex p-1 bg-stone-100 rounded-xl border border-stone-200 mt-4">
+        {/* SELECTOR MODO COMPRA (MÁS GRANDE Y TÁCTIL) */}
+        <div className="w-full sm:w-auto inline-flex p-1.5 bg-stone-100 rounded-2xl border border-stone-200 mt-4 shadow-inner gap-1">
           <button
             onClick={() => setSaleMode('minorista')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-              saleMode === 'minorista' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-800'
+            className={`flex-1 sm:flex-initial px-5 py-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 ${
+              saleMode === 'minorista'
+                ? 'bg-white text-stone-900 shadow-md scale-[1.02]'
+                : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            🛍️ Venta Minorista
+            <span className="text-base">🛍️</span>
+            <span>Venta Minorista</span>
           </button>
           <button
             onClick={() => setSaleMode('mayorista')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-              saleMode === 'mayorista' ? 'bg-amber-500 text-white shadow-xs' : 'text-stone-500 hover:text-stone-800'
+            className={`flex-1 sm:flex-initial px-5 py-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 ${
+              saleMode === 'mayorista'
+                ? 'bg-amber-500 text-white shadow-md scale-[1.02]'
+                : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            📦 Venta Mayorista
+            <span className="text-base">📦</span>
+            <span>Venta Mayorista</span>
           </button>
         </div>
       </div>
@@ -187,13 +220,13 @@ export default function Catalogo() {
               ? (item.priceWholesale || item.priceRetail || item.price || 0)
               : (item.priceRetail || item.price || 0);
 
-            const minQty = isWholesale ? (item.minWholesaleQty || 1) : 1;
+            const minQty = isWholesale ? (Number(item.minWholesaleQty) || 1) : 1;
             const inStock = item.stock >= minQty;
 
             return (
               <div
                 key={item._id}
-                onClick={() => setModalProduct(item)} // 🌟 Al hacer clic en la tarjeta se abre el Pop-up
+                onClick={() => setModalProduct(item)}
                 className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group cursor-pointer"
               >
                 <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
@@ -256,7 +289,7 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* 🌟 MODAL / POP-UP DE DETALLE */}
+      {/* MODAL DETALLE */}
       {modalProduct && (
         <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in duration-200">
