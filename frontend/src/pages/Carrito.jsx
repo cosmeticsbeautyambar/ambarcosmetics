@@ -2,8 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
-// 📱 NÚMERO DE WHATSAPP DE LA DUEÑA (Sin el signo + ni espacios)
-const WHATSAPP_NUMBER = '5491112345678'; // 👈 Reemplazá este número por el real
+// 📱 NÚMERO DE WHATSAPP OFICIAL DE LA TIENDA
+const WHATSAPP_NUMBER = '5492213064797';
 
 // 🌟 CARGA AUTOMÁTICA DE IMÁGENES DE LA CARPETA ASSETS/RESEÑAS
 const reviewModules = import.meta.glob('../assets/reseñas/*.{png,jpg,jpeg,webp,PNG,JPG,WEBP}', {
@@ -307,7 +307,7 @@ export default function Carrito() {
                       type="tel"
                       name="phone"
                       required
-                      placeholder="Ej: 1123456789"
+                      placeholder="Ej: 2213064797"
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full p-2.5 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
@@ -384,7 +384,7 @@ export default function Carrito() {
                   </div>
                 </div>
                 <span className="text-[10px] bg-emerald-800/80 text-emerald-200 font-bold px-2 py-0.5 rounded-full">
-                  ⭐ +500 Reseñas
+                  ⭐ Reseñas
                 </span>
               </div>
 
