@@ -141,7 +141,6 @@ export default function App() {
                   <div className="text-center mb-6">
                     <span className="text-4xl">🔐</span>
                     <h2 className="text-xl font-bold text-stone-800 mt-2">Acceso Exclusivo</h2>
-                    <p className="text-xs text-stone-500 mt-1">Ingresá tus credenciales para gestionar stock y precios.</p>
                   </div>
 
                   {loginError && (
