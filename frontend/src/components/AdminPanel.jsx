@@ -14,7 +14,6 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Componente de Imagen Nítida sin deformación ni pixelado
 const SafeImage = ({ src, alt, className = "" }) => {
   const [error, setError] = useState(false);
 
@@ -42,15 +41,35 @@ const SafeImage = ({ src, alt, className = "" }) => {
 
 export default function AdminPanel() {
   const authContext = useContext(AuthContext);
-  const token = authContext?.token || localStorage.getItem('token');
+
+  // Búsqueda inteligente de Token leyendo 'userInfo'
+  const getStoredToken = () => {
+    if (authContext?.token) return authContext.token;
+
+    // Intentar leer desde 'userInfo' (donde guardas el objeto del usuario logueado)
+    try {
+      const rawUserInfo = localStorage.getItem('userInfo');
+      if (rawUserInfo) {
+        const parsedUser = JSON.parse(rawUserInfo);
+        if (parsedUser.token) return parsedUser.token;
+      }
+    } catch (e) {
+      console.error("Error al leer userInfo de localStorage:", e);
+    }
+
+    // Fallbacks secundarios
+    const directToken = localStorage.getItem('token') || localStorage.getItem('userToken') || localStorage.getItem('jwt');
+    if (directToken) return directToken;
+
+    return null;
+  };
 
   const [products, setProducts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageMode, setImageMode] = useState('file'); // 'file' | 'url'
+  const [imageMode, setImageMode] = useState('file');
 
-  // Estado del Formulario
   const [formData, setFormData] = useState({
     name: '',
     category: 'Facial',
@@ -62,7 +81,6 @@ export default function AdminPanel() {
     destacado: false
   });
 
-  // Cargar productos
   const loadProducts = async () => {
     setLoading(true);
     try {
@@ -82,7 +100,6 @@ export default function AdminPanel() {
     loadProducts();
   }, []);
 
-  // Handler de inputs de texto/checkbox
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -91,7 +108,6 @@ export default function AdminPanel() {
     }));
   };
 
-  // Handler para subir archivo desde el dispositivo
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -105,13 +121,12 @@ export default function AdminPanel() {
     reader.onloadend = () => {
       setFormData((prev) => ({
         ...prev,
-        image: reader.result // Convierte el archivo local a Data URL HD
+        image: reader.result
       }));
     };
     reader.readAsDataURL(file);
   };
 
-  // Cargar datos en modo edición
   const handleEditClick = (product) => {
     setEditingId(product._id);
     setFormData({
@@ -133,7 +148,6 @@ export default function AdminPanel() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Cancelar Edición
   const handleCancelEdit = () => {
     setEditingId(null);
     setFormData({
@@ -148,7 +162,6 @@ export default function AdminPanel() {
     });
   };
 
-  // Guardar (Crear o Actualizar)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -158,7 +171,7 @@ export default function AdminPanel() {
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
-      const activeToken = token || localStorage.getItem('token');
+      const activeToken = getStoredToken();
       const headers = { 'Content-Type': 'application/json' };
 
       if (activeToken) {
@@ -185,12 +198,10 @@ export default function AdminPanel() {
     }
   };
 
-  // Eliminar Producto (Verificación estricta de Token)
   const handleDelete = async (id) => {
     if (!window.confirm('¿Seguro que querés eliminar este producto?')) return;
 
-    // Obtener token fresco del contexto o localStorage
-    const activeToken = token || localStorage.getItem('token');
+    const activeToken = getStoredToken();
 
     if (!activeToken) {
       alert("⚠️ No estás logueado o tu sesión expiró. Volvé a iniciar sesión.");
@@ -209,13 +220,12 @@ export default function AdminPanel() {
       if (res.ok) {
         loadProducts();
       } else if (res.status === 401) {
-        alert('❌ No tenés autorización para eliminar. Tu sesión expiró o es inválida, volvé a iniciar sesión.');
+        alert('❌ No tenés autorización para eliminar. Volvé a iniciar sesión.');
       } else {
-        alert('No se pudo eliminar el producto. Intentalo de nuevo.');
+        alert('No se pudo eliminar el producto.');
       }
     } catch (err) {
       console.error("Error al eliminar:", err);
-      alert('Error de conexión al intentar eliminar.');
     }
   };
 
@@ -312,7 +322,6 @@ export default function AdminPanel() {
             />
           </div>
 
-          {/* INPUT CARGA DE IMAGEN (DISPOSITIVO / URL) + PREVISUALIZACIÓN */}
           <div className="md:col-span-2 bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3">
             <div className="flex justify-between items-center border-b border-stone-200 pb-2">
               <label className="block font-bold text-stone-800 text-xs">
@@ -356,7 +365,7 @@ export default function AdminPanel() {
                       className="w-full text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-200 file:text-stone-800 hover:file:bg-stone-300 cursor-pointer"
                     />
                     <p className="text-[10px] text-stone-400 mt-1">
-                      Soporta JPG, PNG, WEBP. Seleccioná una foto nítida de tu equipo.
+                      Soporta JPG, PNG, WEBP.
                     </p>
                   </div>
                 ) : (
@@ -369,14 +378,10 @@ export default function AdminPanel() {
                       onChange={handleChange}
                       className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
                     />
-                    <p className="text-[10px] text-stone-400 mt-1">
-                      Pegá la URL directa de la imagen de alta resolución.
-                    </p>
                   </div>
                 )}
               </div>
 
-              {/* VISTA PREVIA EN TIEMPO REAL NÍTIDA */}
               <div className="flex flex-col items-center justify-center">
                 <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa HD</span>
                 <SafeImage
