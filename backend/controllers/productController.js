@@ -47,7 +47,7 @@ exports.createProduct = async (req, res) => {
       destacado 
     } = req.body;
 
-    // Soportar tanto 'price' como 'priceRetail' para no violar validaciones del Modelo
+    // Asignamos el valor a ambos nombres para cumplir las reglas del modelo
     const finalPrice = Number(priceRetail || price || 0);
 
     const productData = {
@@ -77,7 +77,7 @@ exports.updateProduct = async (req, res) => {
   try {
     const updateData = { ...req.body };
     
-    // Si viene precio, sincronizar price y priceRetail
+    // Si viene precio, aseguramos la equivalencia en ambos campos
     if (updateData.priceRetail || updateData.price) {
       const finalPrice = Number(updateData.priceRetail || updateData.price);
       updateData.price = finalPrice;
