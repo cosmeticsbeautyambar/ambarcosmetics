@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 
 // Páginas y Componentes según la estructura del proyecto
@@ -7,18 +8,15 @@ import Catalogo from './pages/Catalogo';
 import AdminPanel from './components/AdminPanel';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home');
   const { user, login, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Estados para el formulario de Login de la Dueña
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loadingLogin, setLoadingLogin] = useState(false);
-
-  const handleAdminAccess = () => {
-    setCurrentView('admin');
-  };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +32,7 @@ export default function App() {
       // Limpia los campos si el login fue exitoso
       setEmail('');
       setPassword('');
+      navigate('/admin'); // Redirige directamente al panel tras un login exitoso
     }
   };
 
@@ -49,7 +48,7 @@ export default function App() {
         
         {/* LOGO */}
         <div 
-          onClick={() => setCurrentView('home')} 
+          onClick={() => navigate('/')} 
           className="cursor-pointer text-white hover:text-rose-200 transition flex items-center gap-2 text-sm font-bold"
         >
           <span>✨</span>
@@ -59,9 +58,9 @@ export default function App() {
         {/* NAVEGACIÓN */}
         <div className="flex items-center space-x-3 sm:space-x-6 text-[11px] sm:text-xs">
           <button
-            onClick={() => setCurrentView('home')}
+            onClick={() => navigate('/')}
             className={`transition pb-0.5 ${
-              currentView === 'home'
+              location.pathname === '/'
                 ? 'text-white border-b-2 border-white font-bold'
                 : 'hover:text-white'
             }`}
@@ -70,9 +69,9 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setCurrentView('catalogo')}
+            onClick={() => navigate('/catalogo')}
             className={`transition pb-0.5 ${
-              currentView === 'catalogo'
+              location.pathname === '/catalogo'
                 ? 'text-white border-b-2 border-white font-bold'
                 : 'hover:text-white'
             }`}
@@ -82,9 +81,9 @@ export default function App() {
 
           {/* BOTÓN PANEL DE LOGÍSTICA / DUEÑA */}
           <button
-            onClick={handleAdminAccess}
+            onClick={() => navigate(isAdmin ? '/admin' : '/login')}
             className={`transition pb-0.5 px-3 py-1 rounded-sm border ${
-              currentView === 'admin'
+              location.pathname === '/admin' || location.pathname === '/login'
                 ? 'bg-rose-200 text-stone-900 border-rose-200 font-bold'
                 : 'border-stone-700 text-stone-300 hover:border-stone-500 hover:text-white'
             }`}
@@ -94,7 +93,10 @@ export default function App() {
 
           {user && (
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
               className="text-stone-400 hover:text-rose-400 transition ml-2 text-[10px]"
               title="Cerrar Sesión de Dueña"
             >
@@ -104,65 +106,79 @@ export default function App() {
         </div>
       </nav>
 
-      {/* RENDERIZADO DINÁMICO DE PANTALLAS */}
+      {/* RENDERIZADO CON RUTAS */}
       <main className="flex-1">
-        {currentView === 'home' && <Home />}
-        {currentView === 'catalogo' && <Catalogo />}
-        
-        {/* CONTROL DE ACCESO AL PANEL PRIVADO */}
-        {currentView === 'admin' && (
-          isAdmin ? (
-            <AdminPanel />
-          ) : (
-            <div className="max-w-md mx-auto my-16 p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-stone-200">
-              <div className="text-center mb-6">
-                <span className="text-4xl">🔐</span>
-                <h2 className="text-xl font-bold text-stone-800 mt-2">Acceso Exclusivo</h2>
-                <p className="text-xs text-stone-500 mt-1">Ingresá tus credenciales para gestionar stock y precios.</p>
-              </div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          
+          {/* RUTA DE LOGIN */}
+          <Route 
+            path="/login" 
+            element={
+              isAdmin ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <div className="max-w-md mx-auto my-16 p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-stone-200">
+                  <div className="text-center mb-6">
+                    <span className="text-4xl">🔐</span>
+                    <h2 className="text-xl font-bold text-stone-800 mt-2">Acceso Exclusivo</h2>
+                    <p className="text-xs text-stone-500 mt-1">Ingresá tus credenciales para gestionar stock y precios.</p>
+                  </div>
 
-              {loginError && (
-                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg text-center font-medium">
-                  {loginError}
+                  {loginError && (
+                    <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg text-center font-medium">
+                      {loginError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+                    <div>
+                      <label className="block text-stone-700 font-semibold mb-1">Email de Administración</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="admin@ejemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-stone-700 font-semibold mb-1">Contraseña</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loadingLogin}
+                      className="w-full py-3 bg-stone-900 text-white font-bold rounded-lg hover:bg-stone-800 transition shadow-sm uppercase tracking-wider text-[11px] disabled:opacity-50"
+                    >
+                      {loadingLogin ? 'Verificando...' : 'Iniciar Sesión'}
+                    </button>
+                  </form>
                 </div>
-              )}
+              )
+            } 
+          />
 
-              <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-stone-700 font-semibold mb-1">Email de Administración</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="admin@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
-                  />
-                </div>
+          {/* RUTA PROTEGIDA DE ADMIN */}
+          <Route 
+            path="/admin" 
+            element={isAdmin ? <AdminPanel /> : <Navigate to="/login" replace />} 
+          />
 
-                <div>
-                  <label className="block text-stone-700 font-semibold mb-1">Contraseña</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loadingLogin}
-                  className="w-full py-3 bg-stone-900 text-white font-bold rounded-lg hover:bg-stone-800 transition shadow-sm uppercase tracking-wider text-[11px] disabled:opacity-50"
-                >
-                  {loadingLogin ? 'Verificando...' : 'Iniciar Sesión'}
-                </button>
-              </form>
-            </div>
-          )
-        )}
+          {/* REDIRECCIÓN DEFAULT POR SI INGRESAN UNA RUTA INEXISTENTE */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </div>
   );
