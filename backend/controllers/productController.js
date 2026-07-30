@@ -35,10 +35,39 @@ exports.getTopProducts = async (req, res) => {
 // Crear producto (Admin / Dueña)
 exports.createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const { 
+      name, 
+      category, 
+      description, 
+      priceRetail, 
+      price, 
+      priceWholesale, 
+      stock, 
+      image, 
+      destacado 
+    } = req.body;
+
+    // Soportar tanto 'price' como 'priceRetail' para no violar validaciones del Modelo
+    const finalPrice = Number(priceRetail || price || 0);
+
+    const productData = {
+      name,
+      category,
+      description,
+      price: finalPrice,
+      priceRetail: finalPrice,
+      priceWholesale: Number(priceWholesale || 0),
+      stock: Number(stock || 0),
+      image: image || '',
+      destacado: Boolean(destacado),
+      salesCount: 0
+    };
+
+    const product = new Product(productData);
     const createdProduct = await product.save();
     res.status(201).json(createdProduct);
   } catch (error) {
+    console.error("❌ Error interno al crear producto:", error);
     res.status(500).json({ message: 'Error al crear producto', error: error.message });
   }
 };
@@ -46,9 +75,18 @@ exports.createProduct = async (req, res) => {
 // Actualizar producto, precios o stock (Admin / Dueña)
 exports.updateProduct = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    
+    // Si viene precio, sincronizar price y priceRetail
+    if (updateData.priceRetail || updateData.price) {
+      const finalPrice = Number(updateData.priceRetail || updateData.price);
+      updateData.price = finalPrice;
+      updateData.priceRetail = finalPrice;
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id, 
-      req.body, 
+      updateData, 
       { new: true, runValidators: true }
     );
     res.json(updatedProduct);
