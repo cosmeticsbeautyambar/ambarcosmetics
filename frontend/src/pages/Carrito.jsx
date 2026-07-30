@@ -41,6 +41,7 @@ export default function Carrito() {
   const [step, setStep] = useState('cart'); // 'cart' | 'checkout'
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [showReviews, setShowReviews] = useState(true); // Toggle sutil para reseñas
 
   // Datos para Facturación y Envío
   const [formData, setFormData] = useState({
@@ -80,6 +81,18 @@ export default function Carrito() {
     }
   };
 
+  // 🏷️ FUNCIÓN PARA OBTENER PRECIO UNITARIO REAL (MAYORISTA VS MINORISTA)
+  const getItemUnitPrice = (item) => {
+    const qty = Number(item.qty || 1);
+    const minQty = Number(item.minWholesaleQty || 6);
+    const wholesalePrice = Number(item.priceWholesale);
+
+    if (wholesalePrice > 0 && qty >= minQty) {
+      return wholesalePrice;
+    }
+    return Number(item.priceRetail || item.price || 0);
+  };
+
   // 🚀 PROCESAR PEDIDO: DESCONTAR STOCK Y ENVIAR POR WHATSAPP
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
@@ -87,28 +100,31 @@ export default function Carrito() {
 
     const orderPayload = {
       customer: formData,
-      items: cartItems.map((item) => ({
-        _id: item._id,
-        name: item.name,
-        qty: item.qty,
-        price: item.price || item.priceRetail || 0
-      })),
+      items: cartItems.map((item) => {
+        const unitPrice = getItemUnitPrice(item);
+        return {
+          _id: item._id,
+          name: item.name,
+          qty: item.qty,
+          price: unitPrice
+        };
+      }),
       subtotal: cartSubtotal,
       discount: cartDiscount,
       total: cartTotal
     };
 
     try {
-      // 1. Envía la orden a /api/orders para restar el stock en MongoDB
+      // 1. Envía la orden a /api/orders
       await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)
       });
     } catch (error) {
-      console.warn("No se pudo conectar con el servidor para restar el stock, procesando pedido por WhatsApp de todos modos:", error);
+      console.warn("No se pudo conectar con el servidor, procesando pedido por WhatsApp de todos modos:", error);
     } finally {
-      // 2. Construir mensaje personalizado para WhatsApp
+      // 2. Construir mensaje personalizado para WhatsApp con precios ajustados
       let message = `*✨ NUEVO PEDIDO - ÁMBAR COSMETICS ✨*\n\n`;
       message += `*👤 Cliente:* ${formData.fullName}\n`;
       message += `*📱 Teléfono:* ${formData.phone}\n`;
@@ -119,13 +135,16 @@ export default function Carrito() {
       
       message += `\n*🛍️ DETALLE DE PRODUCTOS:*\n`;
       cartItems.forEach((item) => {
-        const price = item.price || item.priceRetail || 0;
-        message += `• ${item.name} x${item.qty} - $${(price * item.qty).toLocaleString('es-AR')}\n`;
+        const unitPrice = getItemUnitPrice(item);
+        const itemTotal = unitPrice * item.qty;
+        const isWholesale = item.priceWholesale > 0 && item.qty >= (item.minWholesaleQty || 6);
+        
+        message += `• ${item.name} x${item.qty} - $${itemTotal.toLocaleString('es-AR')}${isWholesale ? ' *(Precio Mayorista)*' : ''}\n`;
       });
 
       message += `\n*Subtotal:* $${cartSubtotal.toLocaleString('es-AR')}\n`;
       if (aplicaDescuento) {
-        message += `*Descuento 10% OFF:* -$${cartDiscount.toLocaleString('es-AR')}\n`;
+        message += `*Descuento PROMO:* -$${cartDiscount.toLocaleString('es-AR')}\n`;
       }
       message += `*💰 TOTAL A PAGAR:* $${cartTotal.toLocaleString('es-AR')}\n\n`;
       message += `_¡Hola! Quisiera los datos bancarios para abonar la compra y confirmar el envío. ¡Muchas gracias!_`;
@@ -133,7 +152,7 @@ export default function Carrito() {
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
 
-      // 3. Limpiar carrito, abrir WhatsApp y volver al inicio
+      // 3. Limpiar carrito y abrir WhatsApp
       clearCart();
       setIsProcessing(false);
       window.open(whatsappUrl, '_blank');
@@ -198,7 +217,9 @@ export default function Carrito() {
               /* PASO 1: LISTA DE PRODUCTOS */
               <div className="space-y-3">
                 {cartItems.map((item) => {
-                  const price = item.price || item.priceRetail || 0;
+                  const unitPrice = getItemUnitPrice(item);
+                  const isWholesale = item.priceWholesale > 0 && item.qty >= (item.minWholesaleQty || 6);
+
                   return (
                     <div
                       key={item._id}
@@ -211,9 +232,16 @@ export default function Carrito() {
                       />
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-xs text-stone-800 truncate">{item.name}</h4>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-bold text-xs text-stone-800 truncate">{item.name}</h4>
+                          {isWholesale && (
+                            <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-200">
+                              🔥 Precio Mayorista
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-stone-500 mt-0.5">
-                          ${price.toLocaleString('es-AR')} u.
+                          ${unitPrice.toLocaleString('es-AR')} u.
                         </p>
 
                         <div className="flex items-center gap-3 mt-2">
@@ -246,7 +274,7 @@ export default function Carrito() {
 
                       <div className="text-right shrink-0">
                         <p className="text-xs font-bold text-stone-900">
-                          ${(price * item.qty).toLocaleString('es-AR')}
+                          ${(unitPrice * item.qty).toLocaleString('es-AR')}
                         </p>
                       </div>
                     </div>
@@ -369,70 +397,68 @@ export default function Carrito() {
               </form>
             )}
 
-            {/* 💬 BANNER / LAYER DE RESEÑAS REALES DE WHATSAPP */}
-            <div className="bg-emerald-950 text-white p-5 rounded-2xl shadow-lg border border-emerald-800/50 space-y-3 relative overflow-hidden">
-              <div className="flex justify-between items-center border-b border-emerald-800/60 pb-2">
+            {/* 💬 WIDGET COMPACTO Y SUTIL DE RESEÑAS (OPTIMIZADO PARA MÓVILES) */}
+            <div className="bg-stone-900 text-white rounded-xl shadow-sm border border-stone-800 overflow-hidden text-xs">
+              <div 
+                onClick={() => setShowReviews(!showReviews)}
+                className="flex justify-between items-center p-3 cursor-pointer select-none hover:bg-stone-800/80 transition"
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">💬</span>
-                  <div>
-                    <h4 className="text-xs font-bold text-emerald-100 uppercase tracking-wide">
-                      Experiencias Reales de Clientes
-                    </h4>
-                    <p className="text-[10px] text-emerald-300">
-                      Resultados comprobados por nuestra comunidad en WhatsApp
-                    </p>
+                  <span className="text-amber-400 text-xs">⭐ 4.9</span>
+                  <span className="font-semibold text-stone-200 text-[11px]">Opiniones de Clientes</span>
+                </div>
+                <button type="button" className="text-stone-400 text-[10px] font-bold uppercase tracking-wider">
+                  {showReviews ? 'Ocultar ▲' : 'Ver Reseñas ▼'}
+                </button>
+              </div>
+
+              {showReviews && (
+                <div className="p-3 border-t border-stone-800 bg-stone-950/40 space-y-2">
+                  {reviewImages.length > 0 ? (
+                    <div className="relative group flex items-center justify-center bg-black/40 rounded-lg p-1.5 border border-stone-800">
+                      <img
+                        src={reviewImages[currentReviewIndex]}
+                        alt={`Reseña ${currentReviewIndex + 1}`}
+                        className="max-h-36 sm:max-h-48 object-contain rounded transition-all duration-300"
+                      />
+
+                      {reviewImages.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handlePrevReview}
+                            className="absolute left-1 bg-stone-900/80 hover:bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-sm transition"
+                          >
+                            ‹
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleNextReview}
+                            className="absolute right-1 bg-stone-900/80 hover:bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-sm transition"
+                          >
+                            ›
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-2 text-center text-[11px] text-stone-400 italic">
+                      💬 "Excelente atención y productos impecables."
+                    </div>
+                  )}
+
+                  <div className="flex justify-center items-center gap-1 pt-0.5">
+                    {reviewImages.map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={`h-1 rounded-full transition-all ${
+                          idx === currentReviewIndex ? 'w-3 bg-amber-400' : 'w-1 bg-stone-700'
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
-                <span className="text-[10px] bg-emerald-800/80 text-emerald-200 font-bold px-2 py-0.5 rounded-full">
-                  ⭐ Reseñas
-                </span>
-              </div>
-
-              {reviewImages.length > 0 ? (
-                <div className="relative group flex items-center justify-center bg-black/30 rounded-xl p-2 border border-emerald-800/40">
-                  <img
-                    src={reviewImages[currentReviewIndex]}
-                    alt={`Reseña WhatsApp ${currentReviewIndex + 1}`}
-                    className="max-h-64 object-contain rounded-lg transition-all duration-300 shadow-md"
-                  />
-
-                  {/* Botones Manuales de Galería */}
-                  {reviewImages.length > 1 && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={handlePrevReview}
-                        className="absolute left-2 bg-stone-900/80 hover:bg-black text-white w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md transition"
-                      >
-                        ‹
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleNextReview}
-                        className="absolute right-2 bg-stone-900/80 hover:bg-black text-white w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-md transition"
-                      >
-                        ›
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="p-4 bg-emerald-900/40 rounded-xl text-center text-xs text-emerald-200 border border-emerald-800/50">
-                  <p>💬 "¡Excelente calidad! Mi piel cambió completamente desde el primer uso."</p>
-                  <span className="block text-[10px] text-emerald-400 mt-1 font-semibold">— Mensaje verificado de WhatsApp</span>
-                </div>
               )}
-
-              <div className="flex justify-center items-center gap-1.5 pt-1">
-                {reviewImages.map((_, idx) => (
-                  <span
-                    key={idx}
-                    className={`h-1.5 rounded-full transition-all ${
-                      idx === currentReviewIndex ? 'w-5 bg-emerald-400' : 'w-1.5 bg-emerald-800'
-                    }`}
-                  />
-                ))}
-              </div>
             </div>
 
           </div>
@@ -453,12 +479,12 @@ export default function Carrito() {
 
                 {aplicaDescuento ? (
                   <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
-                    <span>✨ Descuento 10% OFF PROMO:</span>
+                    <span>✨ Descuento PROMO:</span>
                     <span>-${cartDiscount.toLocaleString('es-AR')}</span>
                   </div>
                 ) : (
                   <p className="text-[10px] text-stone-500 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/80 italic">
-                    💡 Sumá ${(50000 - cartSubtotal).toLocaleString('es-AR')} más para obtener **10% OFF**.
+                    💡 Sumá ${(50000 - cartSubtotal).toLocaleString('es-AR')} más para obtener beneficio extra.
                   </p>
                 )}
 
