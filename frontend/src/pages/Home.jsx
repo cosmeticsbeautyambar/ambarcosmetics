@@ -68,6 +68,7 @@ const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
 
@@ -93,6 +94,16 @@ export default function Home() {
     }
   };
 
+  // Manejar la búsqueda al presionar Enter o la lupa
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/catalogo?busqueda=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      navigate('/catalogo');
+    }
+  };
+
   const handleAddDestacado = (item) => {
     const price = item.priceRetail || item.price || 0;
     addToCart({ ...item, price }, 1);
@@ -113,9 +124,9 @@ export default function Home() {
 
       {/* 1. HEADER & NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-rose-200/50 shadow-xs" style={{ backgroundColor: '#f9e5dc' }}>
-        <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-6 py-1.5 flex justify-between items-center gap-4">
           
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-4 cursor-pointer shrink-0" onClick={() => navigate('/')}>
             {logoImg && (
               <img 
                 src={logoImg} 
@@ -128,14 +139,22 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1 w-1/3 bg-white/70 backdrop-blur-xs">
+          {/* BUSCADOR CONECTADO AL CATÁLOGO */}
+          <form 
+            onSubmit={handleSearchSubmit} 
+            className="hidden md:flex items-center border border-stone-300/60 rounded-xs px-3 py-1 w-1/3 bg-white/70 backdrop-blur-xs focus-within:ring-1 focus-within:ring-stone-800"
+          >
             <input 
               type="text" 
               placeholder="Buscar productos..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-transparent focus:outline-none text-xs text-stone-700 placeholder-stone-500" 
             />
-            <span className="text-stone-500 text-xs">🔍</span>
-          </div>
+            <button type="submit" className="text-stone-500 text-xs hover:text-stone-900 transition" title="Buscar">
+              🔍
+            </button>
+          </form>
 
         </div>
 
