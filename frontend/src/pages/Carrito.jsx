@@ -2,6 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
+// 📱 NÚMERO DE WHATSAPP DE LA DUEÑA (Sin el signo + ni espacios)
+const WHATSAPP_NUMBER = '5491112345678'; // 👈 Reemplazá este número por el real
+
 // 🌟 CARGA AUTOMÁTICA DE IMÁGENES DE LA CARPETA ASSETS/RESEÑAS
 const reviewModules = import.meta.glob('../assets/reseñas/*.{png,jpg,jpeg,webp,PNG,JPG,WEBP}', {
   eager: true,
@@ -77,52 +80,64 @@ export default function Carrito() {
     }
   };
 
-  // 🔒 PROCESAMIENTO DEL PUENTE DE PAGO SEGURO
+  // 🚀 PROCESAR PEDIDO: DESCONTAR STOCK Y ENVIAR POR WHATSAPP
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
 
     const orderPayload = {
       customer: formData,
-      items: cartItems,
+      items: cartItems.map((item) => ({
+        _id: item._id,
+        name: item.name,
+        qty: item.qty,
+        price: item.price || item.priceRetail || 0
+      })),
       subtotal: cartSubtotal,
       discount: cartDiscount,
-      total: cartTotal,
-      createdAt: new Date().toISOString()
+      total: cartTotal
     };
 
     try {
-      // Petición al Servidor para generar la orden y la preferencia de Mercado Pago
-      const response = await fetch(`${API_URL}/orders/checkout`, {
+      // 1. Envía la orden a /api/orders para restar el stock en MongoDB
+      await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload)
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Si el backend responde con link de Mercado Pago, redirigimos
-        if (data.init_point) {
-          window.location.href = data.init_point;
-          return;
-        }
-
-        // Si no hay pasarela configurada todavía, simula éxito
-        alert('✨ ¡Pedido registrado con éxito! Te contactaremos por WhatsApp para coordinar la entrega.');
-        clearCart();
-        navigate('/');
-      } else {
-        // Fallback en caso de que la ruta /orders/checkout no esté desplegada aún
-        alert('✨ ¡Pedido registrado exitosamente! Redirigiendo para confirmación...');
-        clearCart();
-        navigate('/');
-      }
     } catch (error) {
-      console.error('Error al procesar el pago:', error);
-      alert('Hubo un pequeño problema de conexión. Intentándolo por canal alternativo seguro.');
+      console.warn("No se pudo conectar con el servidor para restar el stock, procesando pedido por WhatsApp de todos modos:", error);
     } finally {
+      // 2. Construir mensaje personalizado para WhatsApp
+      let message = `*✨ NUEVO PEDIDO - ÁMBAR COSMETICS ✨*\n\n`;
+      message += `*👤 Cliente:* ${formData.fullName}\n`;
+      message += `*📱 Teléfono:* ${formData.phone}\n`;
+      message += `*📧 Email:* ${formData.email}\n`;
+      message += `*📄 DNI/CUIT:* ${formData.dni} (${formData.taxType})\n`;
+      message += `*📍 Dirección:* ${formData.address}\n`;
+      if (formData.notes) message += `*📝 Notas:* ${formData.notes}\n`;
+      
+      message += `\n*🛍️ DETALLE DE PRODUCTOS:*\n`;
+      cartItems.forEach((item) => {
+        const price = item.price || item.priceRetail || 0;
+        message += `• ${item.name} x${item.qty} - $${(price * item.qty).toLocaleString('es-AR')}\n`;
+      });
+
+      message += `\n*Subtotal:* $${cartSubtotal.toLocaleString('es-AR')}\n`;
+      if (aplicaDescuento) {
+        message += `*Descuento 10% OFF:* -$${cartDiscount.toLocaleString('es-AR')}\n`;
+      }
+      message += `*💰 TOTAL A PAGAR:* $${cartTotal.toLocaleString('es-AR')}\n\n`;
+      message += `_¡Hola! Quisiera los datos bancarios para abonar la compra y confirmar el envío. ¡Muchas gracias!_`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+
+      // 3. Limpiar carrito, abrir WhatsApp y volver al inicio
+      clearCart();
       setIsProcessing(false);
+      window.open(whatsappUrl, '_blank');
+      navigate('/');
     }
   };
 
@@ -136,7 +151,7 @@ export default function Carrito() {
             <span>🛍️</span> {step === 'cart' ? 'Tu Carrito de Compras' : 'Finalizar Pedido'}
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            {step === 'cart' ? 'Revisá tus productos antes de confirmar' : 'Ingresá tus datos de facturación y pago seguro'}
+            {step === 'cart' ? 'Revisá tus productos antes de confirmar' : 'Ingresá tus datos de envío para coordinar el pedido'}
           </p>
         </div>
 
@@ -255,7 +270,7 @@ export default function Carrito() {
                     📋 Datos de Facturación y Envío
                   </h3>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
-                    SSL 256-Bit
+                    Directo a WhatsApp
                   </span>
                 </div>
 
@@ -274,7 +289,7 @@ export default function Carrito() {
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-stone-700 mb-1">Email (para enviar factura) *</label>
+                    <label className="block font-semibold text-stone-700 mb-1">Email *</label>
                     <input
                       type="email"
                       name="email"
@@ -422,7 +437,7 @@ export default function Carrito() {
 
           </div>
 
-          {/* COLUMNA DERECHA: RESUMEN DE PAGOS Y PUENTE SEGURO */}
+          {/* COLUMNA DERECHA: RESUMEN DE PAGOS Y ENVIAR */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm sticky top-6 space-y-5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 border-b border-stone-100 pb-3 flex items-center justify-between">
@@ -459,7 +474,7 @@ export default function Carrito() {
                   onClick={() => setStep('checkout')}
                   className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 text-xs uppercase tracking-wider rounded-lg transition shadow-sm flex items-center justify-center gap-2"
                 >
-                  <span>Continuar a Facturación</span>
+                  <span>Cargar Datos de Envío</span>
                   <span>→</span>
                 </button>
               ) : (
@@ -476,11 +491,11 @@ export default function Carrito() {
                   {isProcessing ? (
                     <>
                       <span className="animate-spin">⏳</span>
-                      <span>Conectando Pasarela Seguro...</span>
+                      <span>Registrando Pedido...</span>
                     </>
                   ) : (
                     <>
-                      <span>🔒 Pagar de Forma Segura</span>
+                      <span>📱 Enviar Pedido por WhatsApp</span>
                     </>
                   )}
                 </button>
@@ -489,12 +504,12 @@ export default function Carrito() {
               {/* BADGES DE SEGURIDAD Y MEDIOS DE PAGO */}
               <div className="pt-2 border-t border-stone-100 space-y-2 text-center">
                 <div className="flex items-center justify-center gap-3 text-stone-400 text-lg">
-                  <span title="Mercado Pago">💳</span>
+                  <span title="WhatsApp Directo">📱</span>
                   <span title="Transferencia Bancaria">🏦</span>
-                  <span title="Tarjeta de Crédito / Débito">🔒</span>
+                  <span title="Atención Personalizada">🤝</span>
                 </div>
                 <p className="text-[10px] text-stone-400 font-medium">
-                  Transacción protegida con cifrado SSL. Tus datos están 100% resguardados.
+                  Al hacer clic se enviará el pedido al WhatsApp oficial de la tienda.
                 </p>
               </div>
 
