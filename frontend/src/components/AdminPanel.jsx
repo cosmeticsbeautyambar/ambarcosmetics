@@ -13,27 +13,29 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Componente para manejar imágenes de forma segura sin romperse
+// Componente de Imagen Nitida sin deformación ni pixelado
 const SafeImage = ({ src, alt, className = "" }) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {
     return (
-      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] select-none ${className}`}>
+      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] select-none rounded border border-stone-200 ${className}`}>
         <span>🖼️</span>
-        <span>Sin imagen</span>
+        <span>Sin foto</span>
       </div>
     );
   }
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      onError={() => setError(true)}
-      className={`${className} object-contain bg-stone-50/80 p-0.5 rounded border border-stone-200/80`}
-      loading="lazy"
-    />
+    <div className={`overflow-hidden bg-stone-100 rounded border border-stone-200/80 flex items-center justify-center ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setError(true)}
+        className="w-full h-full object-cover object-center transition-transform hover:scale-105 duration-300"
+        loading="lazy"
+      />
+    </div>
   );
 };
 
@@ -42,6 +44,7 @@ export default function AdminPanel() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageMode, setImageMode] = useState('file'); // 'file' | 'url'
 
   // Estado del Formulario
   const [formData, setFormData] = useState({
@@ -75,13 +78,34 @@ export default function AdminPanel() {
     loadProducts();
   }, []);
 
-  // Handler de inputs
+  // Handler de inputs de texto/checkbox
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  // Handler para subir archivo desde el dispositivo
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validación básica de tamaño (Máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("La imagen es demasiado grande. Por favor seleccioná un archivo de menos de 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        image: reader.result // Convierte el archivo local a Data URL HD
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   // Cargar datos en modo edición
@@ -97,6 +121,12 @@ export default function AdminPanel() {
       image: product.image || '',
       destacado: product.destacado || false
     });
+    // Si la imagen es un Link de internet seteamos la solapa URL, sino File
+    if (product.image && product.image.startsWith('http')) {
+      setImageMode('url');
+    } else {
+      setImageMode('file');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -252,33 +282,80 @@ export default function AdminPanel() {
             />
           </div>
 
-          {/* INPUT IMAGEN + PREVISUALIZACIÓN */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end bg-stone-50 p-3 rounded-lg border border-stone-200">
-            <div className="sm:col-span-3">
-              <label className="block font-semibold mb-1 text-stone-700">
-                URL de la Imagen (Link directo de la foto)
+          {/* INPUT CARGA DE IMAGEN (DISPOSITIVO / URL) + PREVISUALIZACIÓN */}
+          <div className="md:col-span-2 bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3">
+            <div className="flex justify-between items-center border-b border-stone-200 pb-2">
+              <label className="block font-bold text-stone-800 text-xs">
+                Imagen del Producto *
               </label>
-              <input
-                type="text"
-                name="image"
-                placeholder="https://ejemplo.com/foto-hd.jpg"
-                value={formData.image}
-                onChange={handleChange}
-                className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
-              />
-              <p className="text-[10px] text-stone-400 mt-1">
-                Tip: Usá imágenes claras con fondo claro y buena resolución para evitar distorsiones.
-              </p>
+              
+              {/* CAMBIADOR DE MODO */}
+              <div className="flex gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setImageMode('file')}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    imageMode === 'file'
+                      ? 'bg-stone-900 text-white'
+                      : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                  }`}
+                >
+                  📁 Subir desde mi Dispositivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageMode('url')}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    imageMode === 'url'
+                      ? 'bg-stone-900 text-white'
+                      : 'bg-stone-200 text-stone-600 hover:bg-stone-300'
+                  }`}
+                >
+                  🌐 Usar Link URL
+                </button>
+              </div>
             </div>
 
-            {/* VISTA PREVIA EN TIEMPO REAL */}
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa</span>
-              <SafeImage
-                src={formData.image}
-                alt="Previsualización"
-                className="w-16 h-16 shadow-xs"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+              <div className="sm:col-span-3">
+                {imageMode === 'file' ? (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="w-full text-stone-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-200 file:text-stone-800 hover:file:bg-stone-300 cursor-pointer"
+                    />
+                    <p className="text-[10px] text-stone-400 mt-1">
+                      Soporta JPG, PNG, WEBP. Seleccioná una foto nítida de tu equipo.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      name="image"
+                      placeholder="https://ejemplo.com/foto-hd.jpg"
+                      value={formData.image}
+                      onChange={handleChange}
+                      className="w-full p-2.5 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-800"
+                    />
+                    <p className="text-[10px] text-stone-400 mt-1">
+                      Pegá la URL directa de la imagen de alta resolución.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* VISTA PREVIA EN TIEMPO REAL NITIDA */}
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-[10px] font-bold text-stone-500 mb-1">Vista Previa HD</span>
+                <SafeImage
+                  src={formData.image}
+                  alt="Previsualización"
+                  className="w-16 h-16 shadow-xs"
+                />
+              </div>
             </div>
           </div>
 
@@ -347,11 +424,11 @@ export default function AdminPanel() {
                 products.map((item) => (
                   <tr key={item._id} className="hover:bg-stone-50/80 transition">
                     <td className="p-2.5">
-                      {/* MINIATURA MÁS AMPLIA QUE NO SE DEFORMA */}
+                      {/* MINIATURA HD NÍTIDA SIN PIXELAR */}
                       <SafeImage
                         src={item.image}
                         alt={item.name}
-                        className="w-14 h-14"
+                        className="w-12 h-12"
                       />
                     </td>
                     <td className="p-3 font-bold text-stone-800 max-w-[180px]">
