@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { CartContext } from '../context/CartContext';
 
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
@@ -13,7 +14,7 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// Componente para renderizado de imagen HD y seguro
+// Componente para renderizado de imagen seguro
 const SafeImage = ({ src, alt, className = "" }) => {
   const [error, setError] = useState(false);
 
@@ -40,10 +41,13 @@ const SafeImage = ({ src, alt, className = "" }) => {
 };
 
 export default function Catalogo() {
+  const { addToCart } = useContext(CartContext);
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
+  const [saleMode, setSaleMode] = useState('minorista'); // 'minorista' | 'mayorista'
 
   // Cargar lista de productos desde el Backend
   useEffect(() => {
@@ -64,38 +68,29 @@ export default function Catalogo() {
     fetchProducts();
   }, []);
 
-  // Función para agregar al carrito estructurado
+  // Función para agregar al carrito vía CartContext
   const handleAddToCart = (product) => {
-    const savedCart = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const isWholesale = saleMode === 'mayorista';
+    const currentPrice = isWholesale
+      ? (product.priceWholesale || product.priceRetail || product.price)
+      : (product.priceRetail || product.price);
 
-    const price = product.priceRetail || product.price || 0;
-    const productId = product._id || product.id;
+    const qtyToAdd = isWholesale ? Number(product.minWholesaleQty || 1) : 1;
 
-    const existingIndex = savedCart.findIndex((x) => (x._id || x.id) === productId);
-
-    let updatedCart = [];
-
-    if (existingIndex >= 0) {
-      updatedCart = savedCart.map((item, index) =>
-        index === existingIndex ? { ...item, qty: item.qty + 1 } : item
-      );
-    } else {
-      const newItem = {
-        _id: productId,
-        name: product.name || product.title || 'Producto Ámbar',
-        price: price,
-        priceRetail: price,
-        image: product.image || product.imagen || '',
-        stock: product.stock ?? 1,
-        qty: 1
-      };
-      updatedCart = [...savedCart, newItem];
+    if (product.stock < qtyToAdd) {
+      alert(`⚠️ Solo quedan ${product.stock} unidades disponibles.`);
+      return;
     }
 
-    localStorage.setItem('cartItems', JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event('storage'));
+    const productToCart = {
+      ...product,
+      price: Number(currentPrice || 0),
+      priceRetail: Number(product.priceRetail || product.price || 0),
+      priceWholesale: Number(product.priceWholesale || 0)
+    };
 
-    alert(`¡"${product.name}" agregado al carrito!`);
+    addToCart(productToCart, qtyToAdd);
+    alert(`🛒 ¡"${product.name}" agregado al carrito! (${qtyToAdd} u.)`);
   };
 
   // Filtrado dinámico
@@ -115,7 +110,7 @@ export default function Catalogo() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 font-sans">
       
       {/* CABECERA */}
-      <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+      <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
         <span className="text-xs font-bold uppercase tracking-widest text-rose-500">
           Nuestra Colección
         </span>
@@ -125,6 +120,30 @@ export default function Catalogo() {
         <p className="text-xs text-stone-500 leading-relaxed">
           Cosmética consciente con formulaciones botánicas de alta calidad.
         </p>
+
+        {/* SELECTOR MODO COMPRA (MINORISTA / MAYORISTA) */}
+        <div className="inline-flex p-1 bg-stone-100 rounded-xl border border-stone-200 mt-4">
+          <button
+            onClick={() => setSaleMode('minorista')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+              saleMode === 'minorista'
+                ? 'bg-white text-stone-900 shadow-xs'
+                : 'text-stone-500 hover:text-stone-800'
+            }`}
+          >
+            🛍️ Venta Minorista
+          </button>
+          <button
+            onClick={() => setSaleMode('mayorista')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+              saleMode === 'mayorista'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-stone-500 hover:text-stone-800'
+            }`}
+          >
+            📦 Venta Mayorista
+          </button>
+        </div>
       </div>
 
       {/* FILTROS Y BÚSQUEDA */}
@@ -174,8 +193,13 @@ export default function Catalogo() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map((item) => {
-            const price = item.priceRetail || item.price || 0;
-            const inStock = item.stock > 0;
+            const isWholesale = saleMode === 'mayorista';
+            const price = isWholesale
+              ? (item.priceWholesale || item.priceRetail || item.price || 0)
+              : (item.priceRetail || item.price || 0);
+
+            const minQty = isWholesale ? (item.minWholesaleQty || 1) : 1;
+            const inStock = item.stock >= minQty;
 
             return (
               <div
@@ -184,9 +208,16 @@ export default function Catalogo() {
               >
                 <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
                   <SafeImage src={item.image} alt={item.name} className="w-full h-full" />
+                  
                   {item.destacado && (
                     <span className="absolute top-3 left-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
                       ★ Destacado
+                    </span>
+                  )}
+
+                  {isWholesale && (
+                    <span className="absolute top-3 right-3 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded border border-amber-200">
+                      Min: {minQty} u.
                     </span>
                   )}
                 </div>
@@ -207,10 +238,11 @@ export default function Catalogo() {
                   <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-extrabold text-stone-900">
-                        ${price.toLocaleString('es-AR')}
+                        ${Number(price).toLocaleString('es-AR')}
+                        {isWholesale && <span className="text-[9px] text-amber-700 block font-normal">Precio Mayorista</span>}
                       </p>
                       <span className={`text-[9px] font-semibold ${inStock ? 'text-emerald-600' : 'text-rose-500'}`}>
-                        {inStock ? `Stock: ${item.stock} u.` : 'Agotado'}
+                        {inStock ? `Stock: ${item.stock} u.` : 'Sin Stock'}
                       </span>
                     </div>
 
@@ -223,7 +255,7 @@ export default function Catalogo() {
                           : 'bg-stone-200 text-stone-400 cursor-not-allowed'
                       }`}
                     >
-                      {inStock ? '🛒 Agregar' : 'Sin Stock'}
+                      {inStock ? (isWholesale ? `+${minQty} u.` : '🛒 Agregar') : 'Sin Stock'}
                     </button>
                   </div>
                 </div>
