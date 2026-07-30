@@ -2,13 +2,24 @@ import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
-// Limpieza profunda de la URL de la API
+// Limpieza profunda de la URL de la API y anti-duplicación
 const getCleanApiUrl = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
+
+  // Si por error la URL viene duplicada (ej: dom.com/apihttps://dom.com/api)
+  if ((url.match(/https?:\/\//g) || []).length > 1) {
+    const parts = url.split(/(?=https?:\/\/)/);
+    url = parts[parts.length - 1]; // Toma únicamente la última URL válida
+  }
+
+  // Sanitizado básico de comillas, corchetes y barras finales
   url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+
+  // Asegura la terminación en /api
   if (!url.endsWith('/api')) {
     url += '/api';
   }
+
   return url;
 };
 

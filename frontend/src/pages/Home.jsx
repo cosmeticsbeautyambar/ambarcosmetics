@@ -15,13 +15,24 @@ import imgFacial from '../assets/facial.png';
 import imgCorporal from '../assets/corporal.png';
 import imgCapilar from '../assets/capilar.png';
 
-// Obtenemos la URL de la API sanitizada
+// Obtenemos la URL de la API sanitizada y anti-duplicados
 const getCleanApiUrl = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
+
+  // Si por error la URL viene duplicada (ej: dom.com/apihttps://dom.com/api)
+  if ((url.match(/https?:\/\//g) || []).length > 1) {
+    const parts = url.split(/(?=https?:\/\/)/);
+    url = parts[parts.length - 1]; // Toma la última URL válida
+  }
+
+  // Sanitizado básico de corchetes, comillas y barras al final
   url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
+
+  // Asegura el /api al final sin duplicar
   if (!url.endsWith('/api')) {
     url += '/api';
   }
+
   return url;
 };
 
@@ -64,7 +75,6 @@ export default function Home() {
   const [destacados, setDestacados] = useState([]);
 
   useEffect(() => {
-    // Llamada corregida a la API con la URL sanitizada y endpoint /products/destacados
     fetch(`${API_URL}/products/destacados`)
       .then((res) => {
         if (!res.ok) throw new Error('API no disponible por el momento');
@@ -184,7 +194,6 @@ export default function Home() {
             <p className="text-xs text-stone-600 max-w-md mx-auto font-light">
               Fórmulas delicadas diseñadas para resaltar la pureza de tu piel.
             </p>
-            {/* BOTÓN CENTRAL CONECTADO AL CATÁLOGO */}
             <div className="pt-1">
               <a 
                 href="#destacados" 
@@ -205,8 +214,6 @@ export default function Home() {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* CATEGORÍA 1: FACIALES */}
           <a href="#faciales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgFacial} 
@@ -220,7 +227,6 @@ export default function Home() {
             </div>
           </a>
 
-          {/* CATEGORÍA 2: CORPORALES */}
           <a href="#corporales" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCorporal} 
@@ -234,7 +240,6 @@ export default function Home() {
             </div>
           </a>
 
-          {/* CATEGORÍA 3: CAPILARES */}
           <a href="#capilares" className="relative h-28 rounded-xs overflow-hidden group cursor-pointer shadow-sm border border-stone-200/80">
             <img 
               src={imgCapilar} 
@@ -247,7 +252,6 @@ export default function Home() {
               </span>
             </div>
           </a>
-
         </div>
       </section>
 
@@ -277,22 +281,13 @@ export default function Home() {
       {/* 5. BANNER PROMOCIONAL COMPACTO */}
       <section className="max-w-5xl mx-auto px-6 my-6">
         <div className="bg-stone-900 border border-stone-800 rounded-xs shadow-lg overflow-hidden flex flex-col md:flex-row items-center">
-          
-          {/* VIDEO PROMO */}
           <div className="w-full md:w-1/2 h-52 md:h-56 bg-stone-950 relative overflow-hidden">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            >
+            <video autoPlay loop muted playsInline className="w-full h-full object-cover">
               <source src={promoVideo} type="video/mp4" />
               Tu navegador no soporta el video.
             </video>
           </div>
 
-          {/* DETALLES DE PRODUCTO & BOTÓN */}
           <div className="w-full md:w-1/2 p-6 md:p-8 text-center md:text-left flex flex-col justify-center items-center md:items-start space-y-3 text-white">
             <span className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-rose-200 block">
               ★ EL MÁS PEDIDO ★
@@ -312,14 +307,11 @@ export default function Home() {
               </a>
             </div>
           </div>
-
         </div>
       </section>
 
       {/* 6. FOOTER */}
       <footer className="bg-stone-100 border-t border-stone-200 text-xs">
-        
-        {/* BANNER PROMOCIONAL DE DESCUENTOS */}
         <div className="bg-stone-900 text-stone-100 py-6 px-6">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="flex items-center gap-3">
@@ -342,9 +334,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ATENCIÓN AL CLIENTE & REDES */}
         <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-stone-600 font-light">
-          
           <div className="space-y-2">
             <h4 className="font-bold uppercase tracking-wider text-stone-800 text-[10px]">Atención al Cliente</h4>
             <p className="flex items-center gap-2">
@@ -374,10 +364,8 @@ export default function Home() {
               </a>
             </div>
           </div>
-
         </div>
 
-        {/* COPYRIGHT & CRÉDITOS GALMATECH */}
         <div className="border-t border-stone-200 py-4 text-center text-[9px] text-stone-400 tracking-wider space-y-1">
           <div>
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
