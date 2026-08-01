@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
-const WHATSAPP_NUMBER = '5492213064797';
+const WHATSAPP_NUMBER = '5493482385840';
 
 const reviewModules = import.meta.glob('../assets/reseñas/*.{png,jpg,jpeg,webp,PNG,JPG,WEBP}', {
   eager: true,
