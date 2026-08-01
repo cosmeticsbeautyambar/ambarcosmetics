@@ -14,14 +14,14 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// 🌟 SafeImage con soporte optimizado para imágenes ampliadas
+// 🌟 SafeImage con soporte optimizado
 const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {
     return (
-      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-xs select-none rounded-xl border border-stone-200 ${className}`}>
-        <span className="text-3xl mb-1">🖼️</span>
+      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] sm:text-xs select-none rounded-xl border border-stone-200 ${className}`}>
+        <span className="text-xl sm:text-3xl mb-1">🖼️</span>
         <span>Sin foto</span>
       </div>
     );
@@ -120,16 +120,16 @@ export default function Catalogo() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 font-sans relative">
+    <div className="max-w-6xl mx-auto px-2 sm:px-6 py-4 sm:py-8 font-sans relative">
       
       {/* 🌟 TOAST NOTIFICACIÓN CENTRADA Y SUTIL */}
       {toastMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/20 backdrop-blur-[2px] pointer-events-none animate-in fade-in duration-200">
-          <div className="bg-stone-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-stone-700 flex items-center gap-3 max-w-xs w-full text-center justify-center pointer-events-auto">
-            <span className="text-xl">✨</span>
+          <div className="bg-stone-900 text-white px-5 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl border border-stone-700 flex items-center gap-3 max-w-xs w-full text-center justify-center pointer-events-auto">
+            <span className="text-lg sm:text-xl">✨</span>
             <div>
-              <p className="font-bold text-xs text-stone-100">{toastMessage.name}</p>
-              <p className="text-[11px] text-stone-300">
+              <p className="font-bold text-[11px] sm:text-xs text-stone-100 line-clamp-1">{toastMessage.name}</p>
+              <p className="text-[10px] sm:text-[11px] text-stone-300">
                 {toastMessage.qty > 0 ? `¡Agregado al carrito! (${toastMessage.qty} u.)` : 'Stock insuficiente'}
               </p>
             </div>
@@ -138,46 +138,43 @@ export default function Catalogo() {
       )}
 
       {/* CABECERA Y SELECTOR DE MODO */}
-      <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
-        <span className="text-xs font-bold uppercase tracking-widest text-rose-500">
+      <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-1 sm:space-y-2">
+        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-rose-500">
           Nuestra Colección
         </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 uppercase tracking-wider">
+        <h1 className="text-xl sm:text-3xl font-extrabold text-stone-900 uppercase tracking-wider">
           Catálogo de Productos
         </h1>
-        <p className="text-xs text-stone-500 leading-relaxed">
-          Cosmética consciente con formulaciones botánicas de alta calidad.
-        </p>
 
         {/* SELECTOR MODO COMPRA */}
-        <div className="w-full sm:w-auto inline-flex p-1.5 bg-stone-100 rounded-2xl border border-stone-200 mt-4 shadow-inner gap-1">
+        <div className="w-full sm:w-auto inline-flex p-1 bg-stone-100 rounded-2xl border border-stone-200 mt-2 sm:mt-4 shadow-inner gap-1">
           <button
             onClick={() => setSaleMode('minorista')}
-            className={`flex-1 sm:flex-initial px-5 py-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 ${
+            className={`flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               saleMode === 'minorista'
                 ? 'bg-white text-stone-900 shadow-md scale-[1.02]'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            <span className="text-base">🛍️</span>
-            <span>Venta Minorista</span>
+            <span className="text-sm sm:text-base">🛍️</span>
+            <span>Minorista</span>
           </button>
           <button
             onClick={() => setSaleMode('mayorista')}
-            className={`flex-1 sm:flex-initial px-5 py-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-2 ${
+            className={`flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-sm font-extrabold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               saleMode === 'mayorista'
                 ? 'bg-amber-500 text-white shadow-md scale-[1.02]'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
-            <span className="text-base">📦</span>
-            <span>Venta Mayorista</span>
+            <span className="text-sm sm:text-base">📦</span>
+            <span>Mayorista</span>
           </button>
         </div>
       </div>
 
       {/* FILTROS Y BÚSQUEDA */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-8 bg-white p-4 rounded-xl border border-stone-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-between mb-6 sm:mb-8 bg-white p-3 sm:p-4 rounded-xl border border-stone-200 shadow-xs">
         <div className="w-full sm:w-72 relative">
           <input
             type="text"
@@ -189,7 +186,7 @@ export default function Catalogo() {
           <span className="absolute left-2.5 top-2.5 text-xs text-stone-400">🔍</span>
         </div>
 
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-center">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto justify-center">
           {['Todas', 'Facial', 'Corporal', 'Capilar'].map((cat) => (
             <button
               key={cat}
@@ -204,7 +201,7 @@ export default function Catalogo() {
         </div>
       </div>
 
-      {/* LISTADO DE PRODUCTOS */}
+      {/* LISTADO DE PRODUCTOS: 2 COLUMNAS EN CELULARES (grid-cols-2) */}
       {loading ? (
         <div className="text-center py-20 text-stone-400 text-xs italic space-y-2">
           <span className="text-2xl block animate-spin">✨</span>
@@ -216,7 +213,7 @@ export default function Catalogo() {
           <p className="text-xs text-stone-500 mt-2">No encontramos productos que coincidan con tu búsqueda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
           {filteredProducts.map((item) => {
             const isWholesale = saleMode === 'mayorista';
             const price = isWholesale
@@ -232,56 +229,55 @@ export default function Catalogo() {
                 onClick={() => setModalProduct(item)}
                 className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group cursor-pointer"
               >
-                <div className="relative aspect-square w-full bg-stone-50 p-4 border-b border-stone-100">
+                <div className="relative aspect-square w-full bg-stone-50 p-2 sm:p-4 border-b border-stone-100">
                   <SafeImage src={item.image} alt={item.name} className="w-full h-full" fit="cover" />
                   
                   {item.destacado && (
-                    <span className="absolute top-3 left-3 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                    <span className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
                       ★ Destacado
                     </span>
                   )}
 
                   {isWholesale && (
-                    <span className="absolute top-3 right-3 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded border border-amber-200">
-                      Min: {minQty} u.
+                    <span className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 bg-amber-100 text-amber-800 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-amber-200">
+                      Min: {minQty}u.
                     </span>
                   )}
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3">
                   <div>
-                    <span className="text-[10px] font-semibold uppercase text-stone-400 tracking-wider">
+                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase text-stone-400 tracking-wider block">
                       {item.category || 'General'}
                     </span>
-                    <h3 className="font-bold text-xs text-stone-800 line-clamp-1 mt-0.5">
+                    <h3 className="font-bold text-[11px] sm:text-xs text-stone-800 line-clamp-1 mt-0.5">
                       {item.name}
                     </h3>
-                    <p className="text-[11px] text-stone-500 line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-[10px] sm:text-[11px] text-stone-500 line-clamp-2 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
                       {item.description || 'Sin descripción disponible.'}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
+                  <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                     <div>
-                      <p className="text-xs font-extrabold text-stone-900">
+                      <p className="text-[11px] sm:text-xs font-extrabold text-stone-900 leading-tight">
                         ${Number(price).toLocaleString('es-AR')}
-                        {isWholesale && <span className="text-[9px] text-amber-700 block font-normal">Precio Mayorista</span>}
                       </p>
-                      <span className={`text-[9px] font-semibold ${inStock ? 'text-emerald-600' : 'text-rose-500'}`}>
-                        {inStock ? `Stock: ${item.stock} u.` : 'Sin Stock'}
+                      <span className={`text-[8px] sm:text-[9px] font-semibold block ${inStock ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {inStock ? `Stock: ${item.stock}u.` : 'Sin Stock'}
                       </span>
                     </div>
 
                     <button
                       onClick={(e) => handleAddToCart(item, e)}
                       disabled={!inStock}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition ${
+                      className={`w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1 ${
                         inStock
                           ? 'bg-stone-900 text-white hover:bg-stone-800 shadow-xs active:scale-95'
                           : 'bg-stone-200 text-stone-400 cursor-not-allowed'
                       }`}
                     >
-                      {inStock ? (isWholesale ? `+${minQty} u.` : '🛒 Agregar') : 'Sin Stock'}
+                      {inStock ? (isWholesale ? `+${minQty}` : '🛒 Agregar') : 'Agotado'}
                     </button>
                   </div>
                 </div>
@@ -292,62 +288,62 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* 🌟 MODAL DETALLE ULTRA AMPLIADO (IMAGEN XXL) */}
+      {/* 🌟 MODAL DETALLE ADAPTADO A CELULAR Y PC */}
       {modalProduct && (
         <div 
           className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
           onClick={() => setModalProduct(null)}
         >
           <div 
-            className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in-95 duration-200 my-auto"
+            className="bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-stone-200 relative animate-in fade-in zoom-in-95 duration-200 my-auto max-h-[92vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             
-            {/* Botón de cierre flotante táctil */}
+            {/* Botón de cierre flotante */}
             <button
               onClick={() => setModalProduct(null)}
-              className="absolute top-4 right-4 z-30 bg-stone-900/90 hover:bg-stone-900 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-2xl font-bold text-base transition transform hover:scale-105 active:scale-95"
+              className="absolute top-3 right-3 z-30 bg-stone-900/90 hover:bg-stone-900 text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-2xl font-bold text-xs sm:text-base transition transform hover:scale-105 active:scale-95"
               title="Cerrar"
             >
               ✕
             </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-12">
+            <div className="grid grid-cols-1 md:grid-cols-12 overflow-y-auto">
               
-              {/* 🖼️ ÁREA DE LA FOTO (Ocupa 8 columnas de 12 en escritorio) */}
-              <div className="md:col-span-8 bg-stone-900 p-4 sm:p-6 md:p-8 flex items-center justify-center relative min-h-[380px] sm:min-h-[480px] md:min-h-[600px]">
+              {/* 🖼️ ÁREA DE LA FOTO (Optimizado para móviles) */}
+              <div className="md:col-span-7 lg:col-span-8 bg-stone-900 p-3 sm:p-6 md:p-8 flex items-center justify-center relative min-h-[260px] sm:min-h-[400px] md:min-h-[550px]">
                 <SafeImage
                   src={modalProduct.detailImage || modalProduct.image}
                   alt={modalProduct.name}
                   fit="contain"
-                  className="w-full h-full max-h-[420px] sm:max-h-[520px] md:max-h-[580px]"
+                  className="w-full h-full max-h-[280px] sm:max-h-[450px] md:max-h-[520px]"
                 />
               </div>
 
-              {/* 📝 ÁREA DE INFORMACIÓN (Ocupa 4 columnas de 12) */}
-              <div className="md:col-span-4 p-6 sm:p-8 flex flex-col justify-between space-y-6 bg-white border-t md:border-t-0 md:border-l border-stone-100">
-                <div className="space-y-3">
-                  <span className="text-xs font-bold tracking-widest text-rose-500 uppercase">
+              {/* 📝 ÁREA DE INFORMACIÓN */}
+              <div className="md:col-span-5 lg:col-span-4 p-4 sm:p-8 flex flex-col justify-between space-y-4 sm:space-y-6 bg-white border-t md:border-t-0 md:border-l border-stone-100">
+                <div className="space-y-2 sm:space-y-3">
+                  <span className="text-[10px] sm:text-xs font-bold tracking-widest text-rose-500 uppercase">
                     {modalProduct.category || 'Cosmética Natural'}
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-stone-900 uppercase tracking-tight leading-snug">
+                  <h2 className="text-lg sm:text-2xl font-black text-stone-900 uppercase tracking-tight leading-snug">
                     {modalProduct.name}
                   </h2>
-                  <div className="w-12 h-1 bg-rose-500/30 rounded-full my-3"></div>
-                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-h-52 sm:max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="w-10 sm:w-12 h-1 bg-rose-500/30 rounded-full my-2 sm:my-3"></div>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-h-36 sm:max-h-64 overflow-y-auto pr-1">
                     {modalProduct.description || 'Sin descripción detallada disponible para este producto.'}
                   </p>
                 </div>
 
-                <div className="space-y-4 pt-6 border-t border-stone-100">
+                <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-6 border-t border-stone-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-stone-400 uppercase tracking-widest font-bold block">Precio final</span>
-                      <span className="text-2xl sm:text-3xl font-black text-stone-900">
+                      <span className="text-[9px] sm:text-[10px] text-stone-400 uppercase tracking-widest font-bold block">Precio final</span>
+                      <span className="text-xl sm:text-3xl font-black text-stone-900">
                         ${Number(saleMode === 'mayorista' ? (modalProduct.priceWholesale || modalProduct.priceRetail) : modalProduct.priceRetail).toLocaleString('es-AR')}
                       </span>
                     </div>
-                    <span className={`text-xs font-extrabold px-3 py-1.5 rounded-full ${modalProduct.stock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                    <span className={`text-[10px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full ${modalProduct.stock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                       {modalProduct.stock > 0 ? `Stock: ${modalProduct.stock} u.` : 'Sin Stock'}
                     </span>
                   </div>
@@ -358,13 +354,13 @@ export default function Catalogo() {
                       setModalProduct(null);
                     }}
                     disabled={modalProduct.stock <= 0}
-                    className={`w-full py-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${
+                    className={`w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${
                       modalProduct.stock > 0
                         ? 'bg-stone-900 hover:bg-stone-800 text-white shadow-stone-900/20'
                         : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
                     }`}
                   >
-                    <span className="text-base">🛒</span>
+                    <span className="text-sm sm:text-base">🛒</span>
                     <span>{modalProduct.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}</span>
                   </button>
                 </div>
