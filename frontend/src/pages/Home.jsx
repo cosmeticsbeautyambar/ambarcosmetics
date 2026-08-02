@@ -36,6 +36,34 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
+// 🌟 SafeImage totalmente ajustado para no romper marcos
+const SafeImage = ({ src, alt, className = "", fit = "contain" }) => {
+  const [error, setError] = useState(false);
+
+  if (error || !src) {
+    return (
+      <div className={`bg-stone-100 flex flex-col items-center justify-center text-stone-400 text-[10px] sm:text-xs select-none rounded-xs border border-stone-200 ${className}`}>
+        <span className="text-xl sm:text-2xl mb-1">🖼️</span>
+        <span>Sin foto</span>
+      </div>
+    );
+  }
+
+  const objectFitClass = fit === "cover" ? "object-cover" : "object-contain";
+
+  return (
+    <div className={`overflow-hidden relative w-full h-full flex items-center justify-center ${className}`}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setError(true)}
+        className={`w-full h-full ${objectFitClass} object-center transition-transform duration-300 group-hover:scale-105`}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 const logoModules = import.meta.glob('../assets/logo.*', { eager: true });
 const logoImg = Object.values(logoModules)[0]?.default || '';
 
@@ -219,11 +247,9 @@ export default function Home() {
                       className="flex items-center gap-3 p-2 hover:bg-stone-50 cursor-pointer transition"
                     >
                       {product.image && (
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
-                          className="w-9 h-9 object-cover rounded-xs border border-stone-100 shrink-0" 
-                        />
+                        <div className="w-9 h-9 shrink-0 overflow-hidden rounded-xs border border-stone-100 bg-stone-50 flex items-center justify-center">
+                          <SafeImage src={product.image} alt={product.name} fit="contain" />
+                        </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-stone-800 truncate uppercase">{product.name}</p>
@@ -367,19 +393,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. PRODUCTOS DESTACADOS DINÁMICOS */}
+      {/* 4. PRODUCTOS DESTACADOS DINÁMICOS (SOLO 1 FILA DE 3) */}
       <section id="destacados" className="max-w-5xl mx-auto px-6 py-6 scroll-mt-24">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-5">
           Productos Destacados
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {destacados.map((item) => (
-            <div key={item._id} className="bg-white border border-stone-200 p-5 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300">
-              <div className="h-40 w-full bg-stone-50 rounded-xs mb-4 overflow-hidden flex items-center justify-center">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          {destacados.slice(0, 3).map((item) => (
+            <div key={item._id} className="bg-white border border-stone-200 p-4 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300 group">
+              
+              {/* MARCO PERFECTO 1:1 PARA DESTACADOS */}
+              <div className="relative aspect-square w-full bg-stone-50/50 p-3 rounded-xs mb-4 overflow-hidden border border-stone-100 flex items-center justify-center">
+                <SafeImage src={item.image} alt={item.name} fit="contain" />
               </div>
+
               <div className="space-y-1.5">
-                <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase">{item.name}</h3>
+                <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase line-clamp-1">{item.name}</h3>
                 <p className="text-xs font-semibold text-stone-900 pb-1">${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}</p>
                 <button 
                   onClick={() => handleAddDestacado(item)}
