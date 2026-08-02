@@ -36,7 +36,7 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// 🌟 SafeImage totalmente ajustado para no romper marcos
+// SafeImage totalmente ajustado para no romper marcos
 const SafeImage = ({ src, alt, className = "", fit = "contain" }) => {
   const [error, setError] = useState(false);
 
@@ -100,10 +100,27 @@ export default function Home() {
   const [allProducts, setAllProducts] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // 👁️ ESTADO PARA EL CONTADOR DE VISITAS
+  const [visits, setVisits] = useState(null);
 
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
   const searchContainerRef = useRef(null);
+
+  // Cargar visitas desde API pública (CountAPI)
+  useEffect(() => {
+    fetch('https://api.countapi.xyz/hit/ambarcosmetics.com/visits')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.value) {
+          setVisits(data.value);
+        }
+      })
+      .catch(() => {
+        // Fallback silencioso si la API no responde
+      });
+  }, []);
 
   // Cargar destacados y lista completa de productos para el buscador
   useEffect(() => {
@@ -514,20 +531,27 @@ export default function Home() {
           <div>
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
           </div>
-          <div className="text-[10px] font-medium text-stone-500">
-            Desarrollado con{' '}
+          <div className="text-[10px] font-medium text-stone-500 flex items-center justify-center gap-1">
+            <span>Desarrollado con</span>
             <span 
               onClick={handleAdminAccess}
               className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none"
               title="Ámbar System"
             >
               🤍
-            </span>{' '}
-            por{' '}
+            </span>
+            <span>por</span>
             <span className="text-stone-800 font-bold tracking-widest hover:text-rose-500 transition cursor-pointer">
               GalmaTech
             </span>
           </div>
+
+          {/* 👁️ CONTADOR DE VISITAS CHIQUITO Y SUTIL */}
+          {visits !== null && (
+            <div className="text-[8px] text-stone-400 font-mono tracking-widest uppercase pt-1 opacity-75">
+              👁️ {visits.toLocaleString('es-AR')} visitas
+            </div>
+          )}
         </div>
       </footer>
 
