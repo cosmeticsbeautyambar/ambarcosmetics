@@ -14,8 +14,8 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// 🌟 SafeImage con soporte optimizado
-const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
+// 🌟 SafeImage totalmente ajustado para no romper marcos
+const SafeImage = ({ src, alt, className = "", fit = "contain" }) => {
   const [error, setError] = useState(false);
 
   if (error || !src) {
@@ -27,15 +27,15 @@ const SafeImage = ({ src, alt, className = "", fit = "cover" }) => {
     );
   }
 
-  const objectFitClass = fit === "contain" ? "object-contain" : "object-cover";
+  const objectFitClass = fit === "cover" ? "object-cover" : "object-contain";
 
   return (
-    <div className={`overflow-hidden flex items-center justify-center ${className}`}>
+    <div className={`overflow-hidden relative w-full h-full flex items-center justify-center ${className}`}>
       <img
         src={src}
         alt={alt}
         onError={() => setError(true)}
-        className={`w-full h-full ${objectFitClass} object-center transition-transform hover:scale-105 duration-300`}
+        className={`w-full h-full ${objectFitClass} object-center transition-transform duration-300 group-hover:scale-105`}
         loading="lazy"
       />
     </div>
@@ -201,7 +201,7 @@ export default function Catalogo() {
         </div>
       </div>
 
-      {/* LISTADO DE PRODUCTOS: 2 COLUMNAS EN CELULARES (grid-cols-2) */}
+      {/* LISTADO DE PRODUCTOS */}
       {loading ? (
         <div className="text-center py-20 text-stone-400 text-xs italic space-y-2">
           <span className="text-2xl block animate-spin">✨</span>
@@ -229,17 +229,18 @@ export default function Catalogo() {
                 onClick={() => setModalProduct(item)}
                 className="bg-white rounded-xl border border-stone-200 shadow-xs hover:shadow-md transition flex flex-col overflow-hidden group cursor-pointer"
               >
-                <div className="relative aspect-square w-full bg-stone-50 p-2 sm:p-4 border-b border-stone-100">
-                  <SafeImage src={item.image} alt={item.name} className="w-full h-full" fit="cover" />
+                {/* 🌟 MARCO PERFECTO 1:1 PARA LA IMAGEN */}
+                <div className="relative aspect-square w-full bg-stone-50/50 p-3 sm:p-4 border-b border-stone-100 overflow-hidden flex items-center justify-center">
+                  <SafeImage src={item.image} alt={item.name} fit="contain" />
                   
                   {item.destacado && (
-                    <span className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+                    <span className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider z-10">
                       ★ Destacado
                     </span>
                   )}
 
                   {isWholesale && (
-                    <span className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 bg-amber-100 text-amber-800 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-amber-200">
+                    <span className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 bg-amber-100 text-amber-800 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-amber-200 z-10">
                       Min: {minQty}u.
                     </span>
                   )}
@@ -288,7 +289,7 @@ export default function Catalogo() {
         </div>
       )}
 
-      {/* 🌟 MODAL DETALLE ADAPTADO A CELULAR Y PC */}
+      {/* 🌟 MODAL DETALLE ADAPTADO */}
       {modalProduct && (
         <div 
           className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto"
@@ -310,7 +311,7 @@ export default function Catalogo() {
 
             <div className="grid grid-cols-1 md:grid-cols-12 overflow-y-auto">
               
-              {/* 🖼️ ÁREA DE LA FOTO (Optimizado para móviles) */}
+              {/* 🖼️ ÁREA DE LA FOTO EN EL MODAL */}
               <div className="md:col-span-7 lg:col-span-8 bg-stone-900 p-3 sm:p-6 md:p-8 flex items-center justify-center relative min-h-[260px] sm:min-h-[400px] md:min-h-[550px]">
                 <SafeImage
                   src={modalProduct.detailImage || modalProduct.image}
