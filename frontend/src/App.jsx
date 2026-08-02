@@ -1,5 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import ReactGA from 'react-ga4'; // <-- Importación de Google Analytics
 import { AuthContext } from './context/AuthContext';
 import { CartContext } from './context/CartContext';
 
@@ -11,7 +12,7 @@ import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const { user, login, logout } = useContext(AuthContext);
-  const { totalCount } = useContext(CartContext); // <-- Badge de items
+  const { totalCount } = useContext(CartContext); // Badge de items
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,6 +20,14 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loadingLogin, setLoadingLogin] = useState(false);
+
+  // 📊 SEGUIMIENTO DE NAVEGACIÓN EN GOOGLE ANALYTICS
+  useEffect(() => {
+    ReactGA.send({ 
+      hitType: 'pageview', 
+      page: location.pathname + location.search 
+    });
+  }, [location]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
