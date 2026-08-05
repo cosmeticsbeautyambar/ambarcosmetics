@@ -45,7 +45,7 @@ export default function Carrito() {
     dni: '',
     taxType: 'Consumidor Final',
     address: '',
-    city: '', // 👈 Campo Localidad
+    city: '',
     notes: ''
   });
 
@@ -86,18 +86,24 @@ export default function Carrito() {
     return retailPrice;
   };
 
+  // 1. Verificamos si la compra incluye algún producto a precio mayorista
+  const hasWholesaleItems = cartItems.some((item) => {
+    const minQty = Number(item.minWholesaleQty) > 0 ? Number(item.minWholesaleQty) : 1;
+    return Number(item.priceWholesale) > 0 && item.qty >= minQty;
+  });
+
   const computedSubtotal = cartItems.reduce((acc, item) => {
     return acc + (getItemUnitPrice(item) * item.qty);
   }, 0);
 
-  const computedDiscount = aplicaDescuento ? cartDiscount : 0;
+  // 2. El descuento del 10% SOLO aplica en compras puramente minoristas
+  const computedDiscount = (!hasWholesaleItems && aplicaDescuento) ? cartDiscount : 0;
   const computedTotal = Math.max(0, computedSubtotal - computedDiscount);
 
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    // 1. Estructura ajustada para el backend
     const orderPayload = {
       customer: {
         fullName: formData.fullName,
@@ -112,7 +118,7 @@ export default function Carrito() {
       items: cartItems.map((item) => {
         const unitPrice = getItemUnitPrice(item);
         return {
-          product: item._id, // 👈 Mapeado como 'product' e '_id' para máxima compatibilidad
+          product: item._id,
           _id: item._id,
           name: item.name,
           qty: Number(item.qty),
@@ -122,11 +128,10 @@ export default function Carrito() {
       subtotal: computedSubtotal,
       discount: computedDiscount,
       total: computedTotal,
-      status: 'pendiente_pago' // 👈 Estado por defecto para que coincida con el AdminPanel
+      status: 'pendiente_pago'
     };
 
     try {
-      // 2. Enviamos la petición POST
       const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,7 +148,6 @@ export default function Carrito() {
     } catch (error) {
       console.error("❌ Error de red/conexión al guardar el pedido:", error);
     } finally {
-      // 3. Armado y redirección a WhatsApp
       let message = `*✨ NUEVO PEDIDO - ÁMBAR COSMETICS ✨*\n\n`;
       message += `*👤 Cliente:* ${formData.fullName}\n`;
       message += `*📱 Teléfono:* ${formData.phone}\n`;
@@ -164,7 +168,7 @@ export default function Carrito() {
       });
 
       message += `\n*Subtotal:* $${computedSubtotal.toLocaleString('es-AR')}\n`;
-      if (aplicaDescuento) {
+      if (computedDiscount > 0) {
         message += `*Descuento PROMO:* -$${computedDiscount.toLocaleString('es-AR')}\n`;
       }
       message += `*💰 TOTAL A PAGAR:* $${computedTotal.toLocaleString('es-AR')}\n\n`;
@@ -385,7 +389,6 @@ export default function Carrito() {
                     </select>
                   </div>
 
-                  {/* 🌟 CAMPO LOCALIDAD */}
                   <div>
                     <label className="block font-semibold text-stone-700 mb-1">Localidad / Ciudad *</label>
                     <input
@@ -493,7 +496,7 @@ export default function Carrito() {
 
           </div>
 
-          {/* RESUMEN */}
+          {/* RESUMEN DE COMPRA */}
           <div className="lg:col-span-5">
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm sticky top-6 space-y-5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 border-b border-stone-100 pb-3 flex items-center justify-between">
@@ -507,14 +510,18 @@ export default function Carrito() {
                   <span className="font-semibold">${computedSubtotal.toLocaleString('es-AR')}</span>
                 </div>
 
-                {aplicaDescuento ? (
+                {hasWholesaleItems ? (
+                  <p className="text-[10px] text-amber-900 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium">
+                    🏷️ Tu compra incluye precio mayorista. Los descuentos promocionales (10% OFF) aplican únicamente para compras minoristas.
+                  </p>
+                ) : aplicaDescuento ? (
                   <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
-                    <span>✨ Descuento PROMO:</span>
+                    <span>✨ Descuento PROMO (10% OFF):</span>
                     <span>-${computedDiscount.toLocaleString('es-AR')}</span>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-stone-500 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/80 italic">
-                    💡 Sumá ${(50000 - computedSubtotal).toLocaleString('es-AR')} más para obtener beneficio extra.
+                  <p className="text-[10px] text-stone-500 bg-stone-50 p-2.5 rounded-lg border border-stone-200/80 italic">
+                    💡 Sumá ${(50000 - computedSubtotal).toLocaleString('es-AR')} más en compras minoristas para obtener un 10% OFF.
                   </p>
                 )}
 

@@ -116,7 +116,7 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // CARGAR PRODUCTOS Y ORDENAR POR LOS MÁS RECIENTES
+  // CARGAR PRODUCTOS Y OBTENER SÓLO LOS ÚLTIMOS 6
   useEffect(() => {
     fetch(`${API_URL}/products`)
       .then((res) => {
@@ -125,9 +125,8 @@ export default function Home() {
       })
       .then((data) => {
         setAllProducts(data);
-        // Invertimos la lista para tomar los últimos agregados primero
-        const reversed = [...data].reverse();
-        setLatestProducts(reversed);
+        const recentSix = [...data].reverse().slice(0, 6);
+        setLatestProducts(recentSix);
       })
       .catch((err) => console.warn("Aviso productos:", err.message));
   }, []);
@@ -216,12 +215,19 @@ export default function Home() {
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased relative">
 
       {/* 0. BARRA SUPERIOR DE ANUNCIOS / PROMO */}
-      <div className="bg-stone-900 text-stone-100 py-1.5 px-4 text-center text-[10px] md:text-xs font-medium tracking-wider uppercase flex justify-center items-center gap-2">
-        <span>✨</span>
-        <span>
-          <strong>10% OFF</strong> en tu primera compra o en compras a partir de <strong>$50.000</strong>
-        </span>
-        <span>✨</span>
+      <div className="bg-stone-900 text-stone-100 py-1.5 px-4 text-center text-[10px] md:text-xs font-medium tracking-wider uppercase flex flex-wrap justify-center items-center gap-x-3 gap-y-0.5">
+        <div className="flex items-center gap-1.5">
+          <span>✨</span>
+          <span>
+            <strong>10% OFF</strong> en tu primera compra o en compras a partir de <strong>$50.000</strong>
+          </span>
+        </div>
+        <span className="hidden md:inline text-rose-300">•</span>
+        <div className="flex items-center gap-1.5 text-rose-200">
+          <span>👑</span>
+          <span>Aprovechá precios mayoristas y <strong>Convertite en revendedora</strong></span>
+          <span>✨</span>
+        </div>
       </div>
 
       {/* 1. HEADER & NAVBAR */}
@@ -416,7 +422,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. ÚLTIMOS LANZAMIENTOS (ROTATIVO Y COMPACTO) */}
+      {/* 4. ÚLTIMOS LANZAMIENTOS (ROTATIVO ENTRE LOS ÚLTIMOS 6) */}
       <section id="ultimos-lanzamientos" className="max-w-3xl mx-auto px-6 py-4 scroll-mt-24">
         <div className="flex items-center justify-center gap-2 mb-4">
           <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
@@ -498,10 +504,13 @@ export default function Home() {
               <span className="text-2xl">🎁</span>
               <div>
                 <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase text-rose-200">
-                  Descuentos Especiales Ámbar
+                  Descuentos Especiales & Venta Mayorista
                 </h3>
                 <p className="text-xs text-stone-300 font-light mt-0.5">
                   Aprovechá un <span className="text-white font-semibold underline underline-offset-2">10% OFF</span> en tu primera compra o al superar los <span className="text-white font-semibold">$50.000</span>.
+                </p>
+                <p className="text-xs text-rose-200 font-medium mt-1">
+                  ✨ ¡Aprovechá los precios en compras mayoristas y convertite en revendedora!
                 </p>
               </div>
             </div>
