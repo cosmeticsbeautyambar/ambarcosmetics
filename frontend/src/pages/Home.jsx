@@ -36,7 +36,6 @@ const getCleanApiUrl = () => {
 
 const API_URL = getCleanApiUrl();
 
-// SafeImage totalmente ajustado para no romper marcos
 const SafeImage = ({ src, alt, className = "", fit = "contain" }) => {
   const [error, setError] = useState(false);
 
@@ -95,53 +94,62 @@ const chunkArray = (array, chunkSize) => {
 const photoGroups = chunkArray(allImages, 3);
 
 export default function Home() {
-  const [destacados, setDestacados] = useState([]);
+  const [latestProducts, setLatestProducts] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [allProducts, setAllProducts] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   
-  // 👁️ ESTADO PARA EL CONTADOR DE VISITAS
   const [visits, setVisits] = useState(null);
 
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
   const searchContainerRef = useRef(null);
 
-  // Cargar visitas desde API pública (CountAPI)
   useEffect(() => {
     fetch('https://api.countapi.xyz/hit/ambarcosmetics.com/visits')
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.value) {
-          setVisits(data.value);
-        }
+        if (data && data.value) setVisits(data.value);
       })
-      .catch(() => {
-        // Fallback silencioso si la API no responde
-      });
+      .catch(() => {});
   }, []);
 
-  // Cargar destacados y lista completa de productos para el buscador
+  // CARGAR PRODUCTOS Y ORDENAR POR LOS MÁS RECIENTES
   useEffect(() => {
-    fetch(`${API_URL}/products/destacados`)
-      .then((res) => {
-        if (!res.ok) throw new Error('API no disponible');
-        return res.json();
-      })
-      .then((data) => setDestacados(data))
-      .catch((err) => console.warn("Aviso:", err.message));
-
     fetch(`${API_URL}/products`)
       .then((res) => {
-        if (!res.ok) throw new Error('Error al cargar catálogo');
+        if (!res.ok) throw new Error('Error al cargar productos');
         return res.json();
       })
-      .then((data) => setAllProducts(data))
-      .catch((err) => console.warn("Aviso catálogo:", err.message));
+      .then((data) => {
+        setAllProducts(data);
+        // Invertimos la lista para tomar los últimos agregados primero
+        const reversed = [...data].reverse();
+        setLatestProducts(reversed);
+      })
+      .catch((err) => console.warn("Aviso productos:", err.message));
   }, []);
 
-  // Cerrar el menú desplegable si se hace clic afuera del buscador
+  // ROTACIÓN AUTOMÁTICA CADA 5 SEGUNDOS SI HAY MÁS DE 3 PRODUCTOS
+  useEffect(() => {
+    if (latestProducts.length <= 3) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % latestProducts.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [latestProducts]);
+
+  // CÁLCULO DE LOS 3 PRODUCTOS VISIBLES EN CADA ROTACIÓN
+  const visibleProducts = latestProducts.length > 0
+    ? Array.from({ length: Math.min(3, latestProducts.length) }, (_, i) => 
+        latestProducts[(currentIndex + i) % latestProducts.length]
+      )
+    : [];
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
@@ -152,7 +160,6 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filtrado dinámico en tiempo real
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -199,7 +206,7 @@ export default function Home() {
     }
   };
 
-  const handleAddDestacado = (item) => {
+  const handleAddProduct = (item) => {
     const price = item.priceRetail || item.price || 0;
     addToCart({ ...item, price }, 1);
     alert(`🛒 ¡"${item.name}" agregado al carrito!`);
@@ -253,7 +260,6 @@ export default function Home() {
               </button>
             </form>
 
-            {/* DESPLEGABLE CON RESULTADOS AL INSTANTE */}
             {showDropdown && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 shadow-lg rounded-xs z-50 max-h-64 overflow-y-auto divide-y divide-stone-100">
                 {searchResults.length > 0 ? (
@@ -410,26 +416,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. PRODUCTOS DESTACADOS DINÁMICOS (SOLO 1 FILA DE 3) */}
-      <section id="destacados" className="max-w-5xl mx-auto px-6 py-6 scroll-mt-24">
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-center text-stone-400 mb-5">
-          Productos Destacados
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {destacados.slice(0, 3).map((item) => (
-            <div key={item._id} className="bg-white border border-stone-200 p-4 rounded-xs relative flex flex-col justify-between shadow-xs hover:border-stone-300 transition duration-300 group">
+      {/* 4. ÚLTIMOS LANZAMIENTOS (ROTATIVO Y COMPACTO) */}
+      <section id="ultimos-lanzamientos" className="max-w-3xl mx-auto px-6 py-4 scroll-mt-24">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-400">
+            Últimos Lanzamientos
+          </h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 transition-all duration-700 ease-in-out">
+          {visibleProducts.map((item) => (
+            <div key={item._id} className="bg-white border border-stone-200 p-2.5 rounded-xs relative flex flex-col justify-between shadow-2xs hover:border-stone-300 transition duration-300 group">
               
-              {/* MARCO PERFECTO 1:1 PARA DESTACADOS */}
-              <div className="relative aspect-square w-full bg-stone-50/50 p-3 rounded-xs mb-4 overflow-hidden border border-stone-100 flex items-center justify-center">
+              {/* ETIQUETA "NUEVO" */}
+              <span className="absolute top-2 right-2 z-10 bg-rose-500 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-xs uppercase tracking-wider">
+                Nuevo
+              </span>
+
+              {/* MARCO COMPACTO Y DECORATIVO */}
+              <div className="relative h-32 sm:h-36 w-full bg-stone-50/50 p-2 rounded-xs mb-2 overflow-hidden border border-stone-100 flex items-center justify-center">
                 <SafeImage src={item.image} alt={item.name} fit="contain" />
               </div>
 
-              <div className="space-y-1.5">
-                <h3 className="text-[11px] font-medium tracking-wider text-stone-600 uppercase line-clamp-1">{item.name}</h3>
-                <p className="text-xs font-semibold text-stone-900 pb-1">${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}</p>
+              <div className="space-y-1">
+                <h3 className="text-[10px] font-medium tracking-wider text-stone-600 uppercase truncate" title={item.name}>
+                  {item.name}
+                </h3>
+                <p className="text-xs font-semibold text-stone-900 pb-0.5">
+                  ${item.priceRetail?.toLocaleString('es-AR') || item.price?.toLocaleString('es-AR')}
+                </p>
                 <button 
-                  onClick={() => handleAddDestacado(item)}
-                  className="w-full bg-stone-900 text-white py-2 text-[10px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none cursor-pointer"
+                  onClick={() => handleAddProduct(item)}
+                  className="w-full bg-stone-900 text-white py-1.5 text-[9px] font-medium uppercase tracking-[0.15em] hover:bg-stone-800 transition rounded-none cursor-pointer"
                 >
                   Agregar al carrito
                 </button>
@@ -546,7 +565,6 @@ export default function Home() {
             </span>
           </div>
 
-          {/* 👁️ CONTADOR DE VISITAS CHIQUITO Y SUTIL */}
           {visits !== null && (
             <div className="text-[8px] text-stone-400 font-mono tracking-widest uppercase pt-1 opacity-75">
               👁️ {visits.toLocaleString('es-AR')} visitas
