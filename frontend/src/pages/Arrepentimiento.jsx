@@ -8,18 +8,60 @@ export default function Arrepentimiento() {
     email: '',
     telefono: '',
     numeroOrden: '',
-    motivo: ''
+    motivo: '',
+    metodo: 'whatsapp' // 'whatsapp' o 'email'
   });
   const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Boton de Arrepentimiento - Ámbar Cosmetics";
+    document.title = "Botón de Arrepentimiento - Ámbar Cosmetics";
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí podés conectar la lógica para enviar por API o Mail
+    setLoading(true);
+
+    const DESTINO_GMAIL = "cosmetics.beauty.ambar@gmail.com";
+    const TELEFONO_WHATSAPP = "5493482385840";
+
+    if (formData.metodo === 'whatsapp') {
+      // OPCIÓN 1: ENVÍO POR WHATSAPP
+      const mensajeWA = `Hola! Quiero solicitar la revocación de mi compra (Botón de Arrepentimiento):%0A%0A` +
+        `• *Nombre:* ${formData.nombre}%0A` +
+        `• *Email:* ${formData.email}%0A` +
+        `• *Teléfono:* ${formData.telefono}%0A` +
+        `• *N° de Orden:* ${formData.numeroOrden}%0A` +
+        `• *Motivo:* ${formData.motivo || 'Sin especificar'}`;
+
+      window.open(`https://wa.me/${TELEFONO_WHATSAPP}?text=${mensajeWA}`, '_blank');
+    } else {
+      // OPCIÓN 2: ENVÍO POR EMAIL (GMAIL)
+      try {
+        await fetch(`https://formspree.io/f/xknlqrqz`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            _replyto: formData.email,
+            _to: DESTINO_GMAIL,
+            _subject: `SOLICITUD DE ARREPENTIMIENTO - Orden #${formData.numeroOrden}`,
+            Nombre: formData.nombre,
+            Email: formData.email,
+            Telefono: formData.telefono,
+            NumeroDeOrden: formData.numeroOrden,
+            Motivo: formData.motivo || 'No especificado'
+          })
+        });
+      } catch (err) {
+        console.error("Error al enviar el correo:", err);
+      }
+    }
+
+    setLoading(false);
     setEnviado(true);
   };
 
@@ -48,7 +90,9 @@ export default function Arrepentimiento() {
             <span className="text-3xl">✨</span>
             <h3 className="text-sm font-bold text-emerald-900">Solicitud Ingresada con Éxito</h3>
             <p className="text-xs text-emerald-700">
-              Hemos recibido tu solicitud de revocación. Nos pondremos en contacto a la brevedad para coordinar la devolución.
+              {formData.metodo === 'whatsapp' 
+                ? 'Te hemos redirigido a WhatsApp para continuar el trámite con un asesor.'
+                : 'Hemos recibido tu solicitud vía correo electrónico. Nos pondremos en contacto a la brevedad.'}
             </p>
             <button
               onClick={() => navigate('/')}
@@ -120,11 +164,42 @@ export default function Arrepentimiento() {
               ></textarea>
             </div>
 
+            {/* SELECTOR DE MÉTODO DE ENVÍO */}
+            <div className="pt-2 border-t border-stone-100">
+              <label className="block text-stone-700 font-bold mb-2">¿Cómo preferís enviar la solicitud?</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, metodo: 'whatsapp' })}
+                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 font-semibold transition ${
+                    formData.metodo === 'whatsapp'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-xs'
+                      : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100'
+                  }`}
+                >
+                  <span>💬</span> WhatsApp
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, metodo: 'email' })}
+                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 font-semibold transition ${
+                    formData.metodo === 'email'
+                      ? 'border-rose-600 bg-rose-50 text-rose-800 shadow-xs'
+                      : 'border-stone-200 bg-stone-50 text-stone-600 hover:bg-stone-100'
+                  }`}
+                >
+                  <span>✉️</span> Correo (Gmail)
+                </button>
+              </div>
+            </div>
+
             <button
               type="submit"
-              className="w-full py-3 bg-stone-900 text-white font-bold rounded-xl hover:bg-stone-800 transition active:scale-95 uppercase tracking-wider text-[11px] shadow-sm"
+              disabled={loading}
+              className="w-full py-3 mt-2 bg-stone-900 text-white font-bold rounded-xl hover:bg-stone-800 transition active:scale-95 uppercase tracking-wider text-[11px] shadow-sm disabled:opacity-50"
             >
-              Enviar Solicitud de Arrepentimiento
+              {loading ? 'Procesando...' : `Enviar por ${formData.metodo === 'whatsapp' ? 'WhatsApp' : 'Correo'}`}
             </button>
           </form>
         )}
