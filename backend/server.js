@@ -2,54 +2,96 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const User = require('./models/User');
 
 const app = express();
 
-// 1. Configuración de CORS completa
+// 1. ENCABEZADOS DE SEGURIDAD (Helmet)
+app.use(helmet());
+
+// 2. CONFIGURACIÓN DE CORS RESTRINGIDO
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL // URL de producción en Vercel/Netlify
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH', 'OPTIONS'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Bloqueado por políticas de CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
-// Middlewares para JSON e imágenes (Ampliamos a 50mb para evitar sorpresas)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use('/api/orders', require('./routes/orders'));
-// Función para crear o actualizar la cuenta de la dueña en la BD
+// 3. RATE LIMITING (Prevención de ataques de fuerza bruta / sobrecarga)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 200, // Máximo 200 peticiones por IP
+  message: { message: 'Demasiadas peticiones desde esta IP. Intente de nuevo más tarde.' }
+});
+app.use('/api/', limiter);
+
+// Limite más estricto para inicio de sesión
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // Máximo 10 intentos de login cada 15 minutos
+  message: { message: 'Demasiados intentos de acceso. Intente en 15 minutos.' }
+});
+app.use('/api/auth/login', authLimiter);
+
+// 4. MIDDLEWARES DE PARSEO (Límite ajustado a 10MB)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// 5. INICIALIZACIÓN SEGURA DE ADMINISTRADOR
 const initAdmin = async () => {
   try {
-    const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
-    const adminPassword = 'ambar123456';
+    const adminEmail = process.env.ADMIN_EMAIL || 'cosmetics.beauty.ambar@gmail.com';
+    const rawPassword = process.env.ADMIN_PASSWORD;
+
+    if (!rawPassword) {
+      console.warn('⚠️ ADVERTENCIA: ADMIN_PASSWORD no está definida en el archivo .env');
+      return;
+    }
 
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(rawPassword, 10);
       await User.create({
         name: 'Dueña Ámbar Cosmetics',
         email: adminEmail,
-        password: adminPassword,
+        password: hashedPassword,
         role: 'admin',
         isAdmin: true
       });
-      console.log('👑 ¡Cuenta de la Dueña creada con éxito!');
+      console.log('👑 ¡Cuenta de la Dueña creada y encriptada con éxito!');
     } else {
-      existingAdmin.password = adminPassword;
+      const isSamePassword = await bcrypt.compare(rawPassword, existingAdmin.password);
+      if (!isSamePassword) {
+        existingAdmin.password = await bcrypt.hash(rawPassword, 10);
+      }
       existingAdmin.role = 'admin';
       existingAdmin.isAdmin = true;
       await existingAdmin.save();
-      console.log('🔄 ¡Cuenta de Admin re-sincronizada con éxito!');
+      console.log('🔄 ¡Cuenta de Admin re-sincronizada de forma segura!');
     }
   } catch (error) {
     console.error('Error al inicializar cuenta admin:', error.message);
   }
 };
 
-// Conexión a MongoDB Atlas
+// 6. CONEXIÓN A MONGO DB ATLAS
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Conexión exitosa a MongoDB Atlas 🍃');
@@ -57,11 +99,11 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// 2. Rutas principales
+// 7. RUTAS PRINCIPALES
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/orders', require('./routes/orders'));
 
-// Ruta raíz de prueba
 app.get('/', (req, res) => {
     res.send('El servidor de Ámbar Cosmetics está funcionando correctamente 🚀');
 });

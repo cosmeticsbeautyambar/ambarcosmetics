@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -6,16 +6,13 @@ export const AuthContext = createContext();
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
 
-  // Si por error la URL viene duplicada (ej: dom.com/apihttps://dom.com/api)
   if ((url.match(/https?:\/\//g) || []).length > 1) {
     const parts = url.split(/(?=https?:\/\/)/);
-    url = parts[parts.length - 1]; // Toma únicamente la última URL válida
+    url = parts[parts.length - 1];
   }
 
-  // Sanitizado básico de comillas, corchetes y barras finales
   url = url.replace(/[\[\]\(\)'"]/g, '').trim().replace(/\/+$/, '');
 
-  // Asegura la terminación en /api
   if (!url.endsWith('/api')) {
     url += '/api';
   }
@@ -27,20 +24,33 @@ const API_URL = getCleanApiUrl();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('userInfo');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('userInfo');
+      return saved ? JSON.parse(saved) : null;
+    } catch (err) {
+      console.error('Error al parsear el usuario del localStorage:', err);
+      localStorage.removeItem('userInfo');
+      return null;
+    }
   });
+
+  const [loading, setLoading] = useState(false);
+
+  // Limpieza automática si el token o estructura almacenada son inválidos
+  useEffect(() => {
+    if (user && !user.token) {
+      logout();
+    }
+  }, [user]);
 
   const login = async (email, password) => {
     try {
-      // Intento principal a /auth/login
       let res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password })
       });
 
-      // Fallback a /login directo si la API no usa el prefijo /auth
       if (res.status === 404) {
         res = await fetch(`${API_URL}/login`, {
           method: 'POST',
@@ -60,6 +70,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.message || `Error en el servidor (${res.status})`);
       }
 
+      if (!data.token) {
+        throw new Error('Respuesta del servidor inválida: falta token de acceso');
+      }
+
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
@@ -67,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Error en Login:', error);
       return { 
         success: false, 
-        message: error.message || 'No se pudo conectar con el servidor. Verificá si el backend terminó de despertar en Render.' 
+        message: error.message || 'No se pudo conectar con el servidor. Verificá tu conexión a internet.' 
       };
     }
   };
@@ -78,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

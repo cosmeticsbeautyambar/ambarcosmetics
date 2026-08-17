@@ -6,20 +6,26 @@ const protect = async (req, res, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      // Extraer token
+      // 1. Obtener token de los encabezados
       token = req.headers.authorization.split(' ')[1];
 
-      // Verificar Token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey_ambar_2026');
+      if (!process.env.JWT_SECRET) {
+        console.error("❌ ERROR CRÍTICO: JWT_SECRET no definida en el archivo .env");
+        return res.status(500).json({ message: 'Error de configuración en el servidor' });
+      }
 
-      // Buscar usuario soportando 'id' o '_id' en el token guardado
+      // 2. Verificar Token con la variable de entorno obligatoria
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // 3. Extraer ID del usuario
       const userId = decoded.id || decoded._id;
       
       if (!userId) {
-        console.error("❌ El token no contiene ID de usuario válido.");
-        return res.status(401).json({ message: 'No autorizado, ID inválido en token' });
+        console.error("❌ El token no contiene un ID de usuario válido.");
+        return res.status(401).json({ message: 'No autorizado, token inválido' });
       }
 
+      // 4. Buscar usuario excluyendo la contraseña
       req.user = await User.findById(userId).select('-password');
 
       if (!req.user) {
@@ -35,12 +41,11 @@ const protect = async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'No autorizado, no hay token en la petición' });
+    return res.status(401).json({ message: 'No autorizado, falta el token de autenticación' });
   }
 };
 
 const admin = (req, res, next) => {
-  // Acepta si es 'role === admin' O si tiene 'isAdmin === true'
   if (req.user && (req.user.role === 'admin' || req.user.isAdmin === true)) {
     next();
   } else {

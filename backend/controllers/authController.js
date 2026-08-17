@@ -2,24 +2,32 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secretkey_ambar_2026', { expiresIn: '30d' });
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET no configurado en las variables de entorno');
+  }
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 // Registro de usuarios clientes (Forzado a role: 'user')
 exports.registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
     
     const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) return res.status(400).json({ message: 'El usuario ya existe' });
 
-    // Por seguridad, NUNCA permitimos asignar el rol 'admin' por body
+    // Forzamos únicamente el rol 'user' para registros públicos
     const user = await User.create({ 
-      name: name ? name.trim() : '', 
+      name: name.trim(), 
       email: cleanEmail, 
       password, 
-      role: 'user' 
+      role: 'user',
+      isAdmin: false
     });
     
     res.status(201).json({
@@ -31,7 +39,7 @@ exports.registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Error en registerUser:', error);
-    res.status(500).json({ message: 'Error al registrar usuario', error: error.message });
+    res.status(500).json({ message: 'Error interno al registrar usuario' });
   }
 };
 
@@ -45,7 +53,7 @@ exports.loginUser = async (req, res) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // 💡 CAMBIO CLAVE: Agregamos .select('+password') para forzar a Mongoose a traer el hash
+    // Traemos el campo password explícitamente para validar la firma
     const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
@@ -54,6 +62,7 @@ exports.loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        isAdmin: user.isAdmin,
         token: generateToken(user._id)
       });
     } else {
@@ -61,6 +70,6 @@ exports.loginUser = async (req, res) => {
     }
   } catch (error) {
     console.error('Error en loginUser:', error);
-    res.status(500).json({ message: 'Error interno en el servidor de autenticación', error: error.message });
+    res.status(500).json({ message: 'Error interno en el servidor de autenticación' });
   }
 };

@@ -40,25 +40,26 @@ const SafeImage = ({ src, alt, className = "" }) => {
 };
 
 export default function AdminPanel() {
-  const authContext = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
-  const getStoredToken = () => {
-    if (authContext?.token) return authContext.token;
-
-    try {
-      const rawUserInfo = localStorage.getItem('userInfo');
-      if (rawUserInfo) {
-        const parsedUser = JSON.parse(rawUserInfo);
-        if (parsedUser.token) return parsedUser.token;
+  // Obtiene el token centralizado desde AuthContext o localStorage como respaldo
+  const getAuthHeader = () => {
+    let token = user?.token;
+    if (!token) {
+      try {
+        const rawUserInfo = localStorage.getItem('userInfo');
+        if (rawUserInfo) {
+          const parsed = JSON.parse(rawUserInfo);
+          token = parsed.token;
+        }
+      } catch (e) {
+        console.error("Error al leer token de localStorage:", e);
       }
-    } catch (e) {
-      console.error("Error al leer userInfo de localStorage:", e);
     }
-
-    return localStorage.getItem('token') || localStorage.getItem('userToken') || localStorage.getItem('jwt') || null;
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
 
-  // 🌟 Navegación de Pestañas ('products' | 'orders')
+  // Navegación de Pestañas ('products' | 'orders')
   const [activeTab, setActiveTab] = useState('products');
 
   // Estados de Productos
@@ -87,7 +88,7 @@ export default function AdminPanel() {
     destacado: false
   });
 
-  // Cargar Productos
+  // Cargar Productos (Pública)
   const loadProducts = async () => {
     setLoading(true);
     try {
@@ -103,14 +104,21 @@ export default function AdminPanel() {
     }
   };
 
-  // Cargar Pedidos
+  // Cargar Pedidos (Protegida: Requiere Token)
   const loadOrders = async () => {
     setOrdersLoading(true);
     try {
-      const res = await fetch(`${API_URL}/orders`);
+      const res = await fetch(`${API_URL}/orders`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
+      } else if (res.status === 401 || res.status === 403) {
+        alert("⚠️ Sesión expirada o no tenés permisos de administrador para ver las órdenes.");
       }
     } catch (err) {
       console.error("Error al cargar pedidos:", err);
@@ -127,19 +135,18 @@ export default function AdminPanel() {
   // Cambiar estado de un pedido
   const handleOrderStatusChange = async (orderId, newStatus) => {
     try {
-      const activeToken = getStoredToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
-
       const res = await fetch(`${API_URL}/orders/${orderId}`, {
         method: 'PATCH',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
         body: JSON.stringify({ status: newStatus })
       });
 
       if (res.ok) {
         await loadOrders();
-        await loadProducts(); // Recarga productos por si cambió el stock
+        await loadProducts(); // Recarga productos por si se descontó stock
       } else {
         alert("No se pudo actualizar el estado de la orden.");
       }
@@ -152,7 +159,7 @@ export default function AdminPanel() {
   // Copiar etiqueta de envío
   const copyShippingData = (order) => {
     const c = order.customer || {};
-    const text = `📦 DATOS DE ENVÍO - ÁMBAR COSMETICS\n----------------------------------\n👤 Destinatario: ${c.fullName}\n📱 WhatsApp: ${c.phone}\n📄 DNI/CUIT: ${c.dni} (${c.taxType})\n🏙️ Localidad: ${c.city || 'No especificada'}\n📍 Dirección: ${c.address}\n📝 Notas: ${c.notes || 'Sin observaciones'}\n💰 Total Pedido: $${order.total?.toLocaleString('es-AR')}`;
+    const text = `📦 DATOS DE ENVÍO - ÁMBAR COSMETICS\n----------------------------------\n👤 Destinatario: ${c.fullName || c.nombre}\n📱 WhatsApp: ${c.phone || c.telefono}\n📄 DNI/CUIT: ${c.dni || 'S/D'} (${c.taxType || 'Consumidor Final'})\n🏙️ Localidad: ${c.city || 'No especificada'}\n📍 Dirección: ${c.address || c.direccion}\n📝 Notas: ${c.notes || 'Sin observaciones'}\n💰 Total Pedido: $${order.total?.toLocaleString('es-AR')}`;
     
     navigator.clipboard.writeText(text);
     setCopiedId(order._id);
@@ -231,16 +238,12 @@ export default function AdminPanel() {
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
-      const activeToken = getStoredToken();
-      const headers = { 'Content-Type': 'application/json' };
-
-      if (activeToken) {
-        headers['Authorization'] = `Bearer ${activeToken}`;
-      }
-
       const response = await fetch(url, {
-        method: method,
-        headers,
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
         body: JSON.stringify(formData)
       });
 
@@ -261,25 +264,18 @@ export default function AdminPanel() {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Seguro que querés eliminar este producto?')) return;
 
-    const activeToken = getStoredToken();
-
-    if (!activeToken) {
-      alert("⚠️ No estás logueado o tu sesión expiró. Volvé a iniciar sesión.");
-      return;
-    }
-
     try {
       const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${activeToken}`
+          ...getAuthHeader()
         }
       });
 
       if (res.ok) {
         loadProducts();
-      } else if (res.status === 401) {
+      } else if (res.status === 401 || res.status === 403) {
         alert('❌ No tenés autorización para eliminar. Volvé a iniciar sesión.');
       } else {
         alert('No se pudo eliminar el producto.');
@@ -289,11 +285,6 @@ export default function AdminPanel() {
     }
   };
 
-  // 🚨 ORDENAR PEDIDOS POR PRIORIDAD / URGENCIA:
-  // 1. Pendiente de pago / Recibido (Máxima urgencia)
-  // 2. Pagado / Cobrado (Pendiente de empaque y despacho)
-  // 3. Despachado (Al final, ya completado)
-  // 4. Cancelado (Al final de todo)
   const sortedOrders = [...orders].sort((a, b) => {
     const priority = {
       'pendiente_pago': 1,
@@ -308,7 +299,6 @@ export default function AdminPanel() {
     if (pA !== pB) {
       return pA - pB;
     }
-    // Si tienen la misma prioridad, el más reciente va primero
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
@@ -357,10 +347,9 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* ================= PESTAÑA 1: INVENTARIO DE PRODUCTOS ================= */}
+      {/* PESTAÑA 1: INVENTARIO DE PRODUCTOS */}
       {activeTab === 'products' && (
         <div className="space-y-8">
-          {/* FORMULARIO DE CREACIÓN / EDICIÓN */}
           <div className={`p-6 rounded-xl shadow-md border transition-colors ${
             editingId ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-stone-200'
           }`}>
@@ -477,7 +466,6 @@ export default function AdminPanel() {
                 />
               </div>
 
-              {/* IMAGEN MINIATURA */}
               <div className="md:col-span-2 bg-stone-50 p-4 rounded-lg border border-stone-200 space-y-3">
                 <div className="flex justify-between items-center border-b border-stone-200 pb-2">
                   <label className="block font-bold text-stone-800 text-xs">
@@ -547,7 +535,6 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* FOTO DETALLE */}
               <div className="md:col-span-2 bg-amber-50/30 p-4 rounded-lg border border-amber-200 space-y-3">
                 <div className="flex justify-between items-center border-b border-amber-200 pb-2">
                   <label className="block font-bold text-amber-900 text-xs">
@@ -649,7 +636,6 @@ export default function AdminPanel() {
             </form>
           </div>
 
-          {/* TABLA DE INVENTARIO DE PRODUCTOS */}
           <div className="bg-white p-6 rounded-xl shadow-md border border-stone-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-bold text-stone-800 flex items-center gap-2">
@@ -756,10 +742,9 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ================= PESTAÑA 2: GESTIÓN DE PEDIDOS ================= */}
+      {/* PESTAÑA 2: GESTIÓN DE PEDIDOS */}
       {activeTab === 'orders' && (
         <div className="bg-white p-6 rounded-xl shadow-md border border-stone-200 space-y-4">
-          
           <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-stone-100 pb-3 gap-2">
             <div>
               <h2 className="text-base font-bold text-stone-800 flex items-center gap-2">
@@ -785,7 +770,9 @@ export default function AdminPanel() {
             <div className="space-y-4">
               {sortedOrders.map((order) => {
                 const c = order.customer || {};
-                const cleanPhone = c.phone ? c.phone.replace(/[^0-9]/g, '') : '';
+                const name = c.fullName || c.nombre || 'Cliente Sin Nombre';
+                const phone = c.phone || c.telefono || '';
+                const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
                 const isPending = order.status === 'pendiente_pago';
                 const isPaid = order.status === 'pagado';
                 const isDispatched = order.status === 'despachado';
@@ -804,8 +791,6 @@ export default function AdminPanel() {
                         : 'bg-stone-100/50 border-stone-200 opacity-60'
                     }`}
                   >
-                    
-                    {/* ENCABEZADO Y BADGE DE ESTADO */}
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-stone-200/60 pb-2">
                       <div>
                         <div className="flex items-center gap-2">
@@ -818,7 +803,7 @@ export default function AdminPanel() {
                         </div>
 
                         <h3 className="text-xs font-bold text-stone-900 mt-0.5 flex items-center gap-2 flex-wrap">
-                          <span>👤 {c.fullName || 'Cliente Sin Nombre'}</span>
+                          <span>👤 {name}</span>
                           {cleanPhone && (
                             <a
                               href={`https://wa.me/549${cleanPhone}`}
@@ -826,13 +811,12 @@ export default function AdminPanel() {
                               rel="noreferrer"
                               className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition inline-flex items-center gap-1"
                             >
-                              💬 WhatsApp ({c.phone})
+                              💬 WhatsApp ({phone})
                             </a>
                           )}
                         </h3>
                       </div>
 
-                      {/* BADGES CON COLORES ALUSIVOS */}
                       <div>
                         {isPending && (
                           <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-xs animate-pulse">
@@ -857,13 +841,12 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* DATOS DE ENVÍO Y CLIENTE */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       <div className="bg-white p-3 rounded-lg border border-stone-200 space-y-1">
                         <p className="font-bold text-[10px] text-stone-400 uppercase tracking-wider">Información de Envío:</p>
                         <p className="text-stone-700">📄 <strong>DNI/CUIT:</strong> {c.dni || 'S/D'} ({c.taxType || 'Consumidor Final'})</p>
                         <p className="text-stone-900 font-semibold">🏙️ <strong>Localidad:</strong> {c.city || 'No especificada'}</p>
-                        <p className="text-stone-900 font-semibold">📍 <strong>Dirección:</strong> {c.address || 'Sin dirección'}</p>
+                        <p className="text-stone-900 font-semibold">📍 <strong>Dirección:</strong> {c.address || c.direccion || 'Sin dirección'}</p>
                         {c.notes && (
                           <p className="text-stone-500 text-[11px] italic bg-amber-50 p-1.5 rounded border border-amber-200 mt-1">
                             📝 <strong>Notas:</strong> {c.notes}
@@ -871,7 +854,6 @@ export default function AdminPanel() {
                         )}
                       </div>
 
-                      {/* DETALLE DE PRODUCTOS Y TOTAL */}
                       <div className="bg-white p-3 rounded-lg border border-stone-200 flex flex-col justify-between space-y-2">
                         <div className="space-y-1 max-h-32 overflow-y-auto">
                           <p className="font-bold text-[10px] text-stone-400 uppercase tracking-wider">Productos Pedidos:</p>
@@ -890,9 +872,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
-                    {/* BOTONES DE ACCIÓN */}
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-200/60">
-                      
                       <button
                         onClick={() => copyShippingData(order)}
                         className="bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
@@ -949,9 +929,7 @@ export default function AdminPanel() {
                           </button>
                         )}
                       </div>
-
                     </div>
-
                   </div>
                 );
               })}
@@ -959,7 +937,6 @@ export default function AdminPanel() {
           )}
         </div>
       )}
-
     </div>
   );
 }
