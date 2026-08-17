@@ -79,10 +79,13 @@ export default function Terminos() {
 
           <section>
             <h2 className="text-xs sm:text-sm font-bold text-stone-900 uppercase tracking-wider mb-2">
-              6. Protección de Datos Personales
+              6. Protección de Datos Personales, Cookies y Servicios de Terceros
             </h2>
             <p>
               Los datos recolectados a través de nuestros formularios son tratados con estricta confidencialidad de acuerdo con la Ley N° 25.326 de Protección de Datos Personales. Este sitio utiliza cookies técnicas para optimizar la experiencia de usuario y el funcionamiento del carrito de compras.
+            </p>
+            <p className="mt-2">
+              Asimismo, esta plataforma integra servicios de terceros como <strong>Google Analytics</strong> y reproductores embebidos de <strong>YouTube (Google LLC)</strong>. Al interactuar con el contenido audiovisual incorporado o navegar en la web, el usuario acepta que estos proveedores puedan almacenar cookies o recopilar datos de uso y navegación conforme a sus propias políticas de privacidad y los <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-rose-700 underline hover:text-stone-900">Términos de Servicio de YouTube</a>.
             </p>
           </section>
 
@@ -91,7 +94,7 @@ export default function Terminos() {
               7. Propiedad Intelectual
             </h2>
             <p>
-              Todos los contenidos presentes en esta plataforma (marcas, logotipos, imágenes, textos y código fuente) son propiedad de Ámbar Cosmetics o cuentan con la correspondiente autorización de uso. Queda prohibida su reproducción o redistribución sin autorización expresa.
+              Todos los contenidos presentes en esta plataforma (marcas, logotipos, imágenes, textos, recursos audiovisuales alojados en nuestro canal de YouTube y código fuente) son propiedad exclusiva de <strong>Ámbar Cosmetics</strong> o cuentan con la correspondiente autorización de uso. Queda prohibida su reproducción o redistribución sin autorización expresa.
             </p>
           </section>
 
