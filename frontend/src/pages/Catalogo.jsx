@@ -120,7 +120,8 @@ export default function Catalogo() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-2 sm:px-6 py-4 sm:py-8 font-sans relative">
+    /* overflow-y-scroll obliga a mantener la barra fija y evita parpadeos molestos */
+    <div className="min-h-screen max-w-6xl mx-auto px-2 sm:px-6 py-4 sm:py-8 font-sans relative overflow-y-scroll">
       
       {/* 🌟 TOAST NOTIFICACIÓN CENTRADA Y SUTIL */}
       {toastMessage && (
@@ -201,11 +202,13 @@ export default function Catalogo() {
         </div>
       </div>
 
-      {/* LISTADO DE PRODUCTOS */}
+      {/* LISTADO DE PRODUCTOS O MENSAJE DE CARGA */}
       {loading ? (
-        <div className="text-center py-20 text-stone-400 text-xs italic space-y-2">
-          <span className="text-2xl block animate-spin">✨</span>
-          <p>Cargando nuestro catálogo...</p>
+        <div className="min-h-[400px] flex flex-col items-center justify-center space-y-3 py-16 text-center">
+          <div className="w-8 h-8 border-2 border-stone-300 border-t-stone-900 rounded-full animate-spin"></div>
+          <p className="text-xs md:text-sm font-medium text-stone-600 tracking-wide">
+            Estoy revisando mi stock, aguardame un segundito 🤍
+          </p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-stone-200 shadow-xs">
