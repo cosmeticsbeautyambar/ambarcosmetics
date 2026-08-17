@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate, Link } from 'react-router-dom';
 import ReactGA from 'react-ga4'; // <-- Importación de Google Analytics
 import { AuthContext } from './context/AuthContext';
 import { CartContext } from './context/CartContext';
@@ -8,6 +8,7 @@ import { CartContext } from './context/CartContext';
 import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
 import Carrito from './pages/Carrito';
+import Terminos from './pages/Terminos';
 import AdminPanel from './components/AdminPanel';
 
 export default function App() {
@@ -139,6 +140,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/terminos" element={<Terminos />} />
           
           <Route 
             path="/login" 
@@ -204,6 +206,22 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* FOOTER GENERAL */}
+      <footer className="bg-stone-900 text-stone-400 py-6 px-4 text-center text-xs border-t border-stone-800 space-y-2">
+        <p className="font-semibold text-stone-300">✨ Ámbar Cosmetics — Cosmética & Cuidado Personal</p>
+        <p className="text-[11px] text-stone-500">
+          © {new Date().getFullYear()} Todos los derechos reservados.
+        </p>
+        <div>
+          <Link 
+            to="/terminos" 
+            className="text-rose-300 hover:text-white underline text-[11px] transition"
+          >
+            Términos y Condiciones
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
