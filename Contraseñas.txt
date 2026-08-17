@@ -6,3 +6,5 @@ mongodb+srv://cosmeticsbeautyambar_db_user:dutrJNOINgxqEQ7V@ambarcosmetics.zeyxo
 https://github.com/cosmeticsbeautyambar/ambarcosmetics.git
 
 .\push.bat
+
+Ambar123456!

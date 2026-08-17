@@ -23,7 +23,7 @@ export default function Arrepentimiento() {
     e.preventDefault();
     setLoading(true);
 
-    const DESTINO_GMAIL = "cosmetics.beauty.ambar@gmail.com";
+    const FORMSPREE_ENDPOINT = "https://formspree.io/f/mnpagkqz";
     const TELEFONO_WHATSAPP = "5493482385840";
 
     if (formData.metodo === 'whatsapp') {
@@ -39,7 +39,7 @@ export default function Arrepentimiento() {
     } else {
       // OPCIÓN 2: ENVÍO POR EMAIL (GMAIL)
       try {
-        await fetch(`https://formspree.io/f/xknlqrqz`, {
+        await fetch(FORMSPREE_ENDPOINT, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -47,7 +47,6 @@ export default function Arrepentimiento() {
           },
           body: JSON.stringify({
             _replyto: formData.email,
-            _to: DESTINO_GMAIL,
             _subject: `SOLICITUD DE ARREPENTIMIENTO - Orden #${formData.numeroOrden}`,
             Nombre: formData.nombre,
             Email: formData.email,
