@@ -560,27 +560,28 @@ export default function Home() {
           <div>
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
           </div>
-          <div className="text-[11px] font-medium text-stone-600 flex items-center justify-center gap-1.5 pt-0.5">
-            <span>Desarrollado con</span>
+          
+          <div className="text-[11px] font-medium text-stone-600 flex items-center justify-center gap-1.5 pt-1">
+            <span className="leading-none">Desarrollado con</span>
             <span 
               onClick={handleAdminAccess}
-              className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none text-rose-400"
+              className="cursor-pointer hover:scale-125 inline-flex items-center transition-transform duration-200 select-none text-rose-500 text-xs"
               title="Ámbar System"
             >
               ❤️
             </span>
-            <span>por</span>
+            <span className="leading-none">por</span>
             <a 
               href="https://www.instagram.com/gs.tech.argentina/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center opacity-85 hover:opacity-100 hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="inline-flex items-center opacity-90 hover:opacity-100 hover:scale-105 transition-all duration-200 cursor-pointer ml-0.5"
               title="GS Tech Instagram"
             >
               <img 
                 src={devLogo} 
                 alt="GS Tech" 
-                className="h-4 sm:h-5 w-auto object-contain max-w-[80px]" 
+                className="h-5 sm:h-6 w-auto object-contain mix-blend-multiply filter contrast-125" 
               />
             </a>
           </div>
