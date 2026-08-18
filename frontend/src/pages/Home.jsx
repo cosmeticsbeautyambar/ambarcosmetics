@@ -556,16 +556,16 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="border-t border-stone-200 py-4 text-center text-[9px] text-stone-400 tracking-wider space-y-1.5">
+        <div className="border-t border-stone-200 py-6 text-center text-[10px] text-stone-400 tracking-wider space-y-2">
           <div>
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
           </div>
           
-          <div className="text-xs md:text-sm font-medium text-stone-700 flex items-center justify-center gap-2 pt-1">
+          <div className="text-sm md:text-base font-medium text-stone-700 flex items-center justify-center gap-2 pt-2">
             <span className="leading-none">Desarrollado con</span>
             <span 
               onClick={handleAdminAccess}
-              className="cursor-pointer hover:scale-125 inline-flex items-center transition-transform duration-200 select-none text-rose-500 text-sm md:text-base"
+              className="cursor-pointer hover:scale-125 inline-flex items-center transition-transform duration-200 select-none text-rose-500 text-base md:text-lg"
               title="Ámbar System"
             >
               ❤️
@@ -581,13 +581,13 @@ export default function Home() {
               <img 
                 src={devLogo} 
                 alt="GS Tech" 
-                className="h-12 sm:h-14 md:h-15 w-auto object-contain mix-blend-multiply filter contrast-125" 
+                className="h-12 sm:h-14 md:h-16 w-auto object-contain mix-blend-multiply filter contrast-125 drop-shadow-xs" 
               />
             </a>
           </div>
 
           {visits !== null && (
-            <div className="text-[8px] text-stone-400 font-mono tracking-widest uppercase pt-1 opacity-75">
+            <div className="text-[9px] text-stone-400 font-mono tracking-widest uppercase pt-1 opacity-75">
               👁️ {visits.toLocaleString('es-AR')} visitas
             </div>
           )}
