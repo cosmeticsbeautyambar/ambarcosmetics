@@ -10,10 +10,13 @@ const User = require('./models/User');
 
 const app = express();
 
+// CONFIGURACIÓN DE CONFIANZA EN PROXY (Necesario para Render y express-rate-limit)
+app.set('trust proxy', 1);
+
 // 1. ENCABEZADOS DE SEGURIDAD (Helmet)
 app.use(helmet());
 
-// 2. CONFIGURACIÓN DE CORS RESTRINGIDO (Corregido)
+// 2. CONFIGURACIÓN DE CORS RESTRINGIDO
 const allowedOrigins = [
   'https://ambarcosmetics.onrender.com', // 🚀 Tu Frontend en Render
   'http://localhost:5173',

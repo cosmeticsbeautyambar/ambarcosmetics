@@ -71,7 +71,7 @@ const imageModules = import.meta.glob('../assets/*.{jpeg,jpg,png}', { eager: tru
 const allImages = Object.keys(imageModules)
   .filter((path) => {
     const fileName = path.split('/').pop();
-    const match = fileName.match(/^(\d+)\.(jpeg|jpg|png)$/i);
+    const match = fileName.match(/^(\d+)\.(jpeg|jpg,png)$/i);
     if (!match) return false;
     const num = parseInt(match[1], 10);
     return num >= 1 && num <= 12;
@@ -559,19 +559,24 @@ export default function Home() {
           <div>
             © {new Date().getFullYear()} ÁMBAR COSMETICS. TODOS LOS DERECHOS RESERVADOS.
           </div>
-          <div className="text-[10px] font-medium text-stone-500 flex items-center justify-center gap-1">
+          <div className="text-[11px] font-medium text-stone-600 flex items-center justify-center gap-1.5 pt-0.5">
             <span>Desarrollado con</span>
             <span 
               onClick={handleAdminAccess}
-              className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none"
+              className="cursor-pointer hover:scale-125 inline-block transition-transform duration-200 select-none text-rose-400"
               title="Ámbar System"
             >
-              🤍
+              ❤️
             </span>
             <span>por</span>
-            <span className="text-stone-800 font-bold tracking-widest hover:text-rose-500 transition cursor-pointer">
-              GalmaTech
-            </span>
+            <a 
+              href="https://www.instagram.com/gs.tech.argentina/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-stone-900 font-extrabold tracking-widest hover:text-rose-600 transition-colors duration-200 cursor-pointer underline underline-offset-4 decoration-rose-300"
+            >
+              GS Tech
+            </a>
           </div>
 
           {visits !== null && (
