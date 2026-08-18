@@ -581,7 +581,7 @@ export default function Home() {
               <img 
                 src={devLogo} 
                 alt="GS Tech" 
-                className="h-8 sm:h-10 md:h-11 w-auto object-contain mix-blend-multiply filter contrast-125" 
+                className="h-12 sm:h-14 md:h-15 w-auto object-contain mix-blend-multiply filter contrast-125" 
               />
             </a>
           </div>
