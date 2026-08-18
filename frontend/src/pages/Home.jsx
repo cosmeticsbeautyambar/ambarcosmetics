@@ -16,6 +16,7 @@ import promoVideo from '../assets/banner-promo.mp4';
 import imgFacial from '../assets/facial.png';
 import imgCorporal from '../assets/corporal.png';
 import imgCapilar from '../assets/capilar.png';
+import devLogo from '../assets/GSTECH.png'; // 👈 Logo del desarrollador
 
 const getCleanApiUrl = () => {
   let url = import.meta.env.VITE_API_URL || 'https://ambarcosmetics-api.onrender.com/api';
@@ -573,9 +574,14 @@ export default function Home() {
               href="https://www.instagram.com/gs.tech.argentina/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-stone-900 font-extrabold tracking-widest hover:text-rose-600 transition-colors duration-200 cursor-pointer underline underline-offset-4 decoration-rose-300"
+              className="inline-flex items-center opacity-85 hover:opacity-100 hover:scale-105 transition-all duration-200 cursor-pointer"
+              title="GS Tech Instagram"
             >
-              GS Tech
+              <img 
+                src={devLogo} 
+                alt="GS Tech" 
+                className="h-4 sm:h-5 w-auto object-contain max-w-[80px]" 
+              />
             </a>
           </div>
 

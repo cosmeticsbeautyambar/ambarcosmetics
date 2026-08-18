@@ -4,7 +4,7 @@ const User = require('./models/User');
 
 // CREDENCIALES DEL ADMINISTRADOR
 const adminEmail = 'cosmetics.beauty.ambar@gmail.com';
-const adminPassword = 'Ambar123456';
+const adminPassword = 'ambar123456';
 
 const runSeed = async () => {
   try {
