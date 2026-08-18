@@ -13,16 +13,17 @@ const app = express();
 // 1. ENCABEZADOS DE SEGURIDAD (Helmet)
 app.use(helmet());
 
-// 2. CONFIGURACIÓN DE CORS RESTRINGIDO
+// 2. CONFIGURACIÓN DE CORS RESTRINGIDO (Corregido)
 const allowedOrigins = [
+  'https://ambarcosmetics.onrender.com', // 🚀 Tu Frontend en Render
   'http://localhost:5173',
   'http://localhost:3000',
-  process.env.CLIENT_URL // URL de producción en Vercel/Netlify
+  process.env.CLIENT_URL // URL adicional si la tenés en .env
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Bloqueado por políticas de CORS'));
